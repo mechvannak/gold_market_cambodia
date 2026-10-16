@@ -273,7 +273,11 @@ def main() -> int:
         return run_sync()
     except (vlt.VaultError, tg.TgError) as exc:
         print(f"error: {exc}")
+        print(f"::error title=Gold Cambodia::{exc}")  # shows in the run summary; messages never hold secrets
         return 1
+    except Exception as exc:  # unexpected: report only the type, never the message (it could echo data)
+        print(f"::error title=Gold Cambodia::unexpected {type(exc).__name__} in telegram_sync.py")
+        raise
 
 
 if __name__ == "__main__":

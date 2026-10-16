@@ -61,6 +61,7 @@ def main() -> int:
         v = vlt.load()
     except vlt.VaultError as exc:
         print(f"error: {exc}")
+        print(f"::error title=Gold Cambodia::{exc}")
         return 1
     now = now_pp()
     market = load_json(MARKET_JSON)
