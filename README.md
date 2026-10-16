@@ -77,5 +77,6 @@ app/forecast.py    blending, buy/sell levels, horizons
 app/api.py         FastAPI + serves the Mini App
 app/auth.py        Telegram initData validation
 app/bot.py         aiogram bot, commands, daily alerts
-webapp/index.html  Mini App dashboard
+index.html         Mini App dashboard (served by the API at /app/)
+docs/index.html    project landing page for GitHub Pages
 ```

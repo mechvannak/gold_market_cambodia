@@ -2,12 +2,13 @@ import asyncio
 from pathlib import Path
 
 from fastapi import FastAPI, Header, HTTPException
-from fastapi.responses import RedirectResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse, RedirectResponse
 
 from .auth import validate_init_data
 from .config import settings
 from .forecast import get_forecast
+
+INDEX_HTML = Path(__file__).resolve().parent.parent / "index.html"
 
 app = FastAPI(title="Gold forecast")
 _lock = asyncio.Lock()
@@ -44,4 +45,9 @@ async def root():
     return RedirectResponse("/app/")
 
 
-app.mount("/app", StaticFiles(directory=str(Path(__file__).resolve().parent.parent / "webapp"), html=True), name="webapp")
+# The Mini App page lives at the repo root (index.html). Serve only that one file,
+# never the whole root folder, so source code and .env are not exposed.
+@app.get("/app")
+@app.get("/app/")
+async def mini_app():
+    return FileResponse(INDEX_HTML)
