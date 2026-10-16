@@ -51,5 +51,33 @@ class ErrorAnnotationTests(unittest.TestCase):
         self.assertIn("::error title=Gold Cambodia::", out)
 
 
+class RunSendWithoutDataTests(unittest.TestCase):
+    """sync.yml runs the catch-up `send` step every hour, long before the first analysis exists."""
+
+    def _run(self, analysis: bool, market: bool):
+        with tempfile.TemporaryDirectory() as d:
+            a, m = Path(d) / "analysis.json", Path(d) / "market.json"
+            if analysis:
+                a.write_text('{"generated_at": "2026-10-19T07:58:00+07:00", "mode": "weekly"}')
+            if market:
+                m.write_text("{}")
+            out = io.StringIO()
+            with mock.patch.object(ts, "ANALYSIS_JSON", a), mock.patch.object(ts, "MARKET_JSON", m), contextlib.redirect_stdout(out):
+                return ts.run_send(), out.getvalue()
+
+    def test_no_analysis_yet_is_not_an_error(self):
+        code, out = self._run(analysis=False, market=True)
+        self.assertEqual(code, 0)
+        self.assertIn("no analysis yet", out)
+
+    def test_nothing_at_all_is_not_an_error(self):
+        self.assertEqual(self._run(analysis=False, market=False)[0], 0)
+
+    def test_missing_market_warns_but_does_not_fail_the_run(self):
+        code, out = self._run(analysis=True, market=False)
+        self.assertEqual(code, 0)
+        self.assertIn("::warning", out)
+
+
 if __name__ == "__main__":
     unittest.main()

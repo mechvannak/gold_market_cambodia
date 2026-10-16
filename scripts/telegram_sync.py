@@ -223,9 +223,14 @@ def run_send() -> int:
     """Turn data/analysis.json into a report. Weekly/monthly are queued for the delivery hour."""
     analysis = load_json(ANALYSIS_JSON)
     market = load_json(MARKET_JSON)
-    if not analysis or not market:
-        print("analysis or market data missing")
-        return 1
+    if not analysis:
+        # Normal before the Claude task has run for the first time: nothing to do, not an error.
+        print("no analysis yet: nothing to send")
+        return 0
+    if not market:
+        # Leave last_analysis_at untouched so the hourly catch-up sends the report once market data exists.
+        print("::warning title=Gold Cambodia::data/market.json is missing; run the market workflow")
+        return 0
     v = vlt.load()
     stamp = str(analysis.get("generated_at", ""))
     if not stamp or stamp == v["last_analysis_at"]:
