@@ -1,0 +1,50 @@
+name: sync
+
+# Hourly: read bot messages and mini-app forms, reply, deliver queued reports at the chosen
+# hour, check price alerts. The bot therefore answers within about an hour.
+on:
+  schedule:
+    # Every hour 07:05-22:05 Cambodia time (UTC+7) = 00:05-15:05 UTC
+    - cron: "5 0-15 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: vault
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Read messages and apply commands
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          VAULT_PASSPHRASE: ${{ secrets.VAULT_PASSPHRASE }}
+        run: python scripts/telegram_sync.py
+      - name: Catch up on any analysis not yet handled
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          VAULT_PASSPHRASE: ${{ secrets.VAULT_PASSPHRASE }}
+        run: python scripts/telegram_sync.py send
+      - name: Deliver queued reports and check alerts
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          VAULT_PASSPHRASE: ${{ secrets.VAULT_PASSPHRASE }}
+        run: python scripts/deliver.py
+      - name: Commit vault
+        run: bash scripts/git_push.sh "data: vault update" data/private.enc
+      - name: Send messages
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          VAULT_PASSPHRASE: ${{ secrets.VAULT_PASSPHRASE }}
+        run: python scripts/telegram_sync.py flush

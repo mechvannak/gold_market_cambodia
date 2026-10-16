@@ -1,0 +1,30 @@
+name: market
+
+# World gold price, 20/50/200-day averages, 3-month high and USD/KHR
+# -> data/market.json and data/history.csv (public data only).
+on:
+  schedule:
+    # Mon-Fri 07:15 and 20:15 Cambodia time (UTC+7) = 00:15 and 13:15 UTC
+    - cron: "15 0,13 * * 1-5"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: market
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fetch market data
+        run: python scripts/market.py
+      - name: Commit and push
+        run: bash scripts/git_push.sh "data: market update" data/market.json data/history.csv

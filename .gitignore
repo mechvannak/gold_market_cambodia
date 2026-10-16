@@ -1,6 +1,8 @@
 .env
-subscribers.json
-__pycache__/
 *.pyc
+__pycache__/
 .venv/
-.pytest_cache/
+gold_outbox.json
+# Never commit unencrypted personal data
+private.json
+*.plain.json

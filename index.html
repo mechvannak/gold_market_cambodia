@@ -1,182 +1,765 @@
 <!doctype html>
-<html lang="en">
+<html lang="km">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Gold Forecast</title>
+<meta name="color-scheme" content="light dark">
+<title>Gold Cambodia Price</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
   :root {
-    --bg: var(--tg-theme-bg-color, #ffffff);
-    --bg2: var(--tg-theme-secondary-bg-color, #f2f3f5);
-    --text: var(--tg-theme-text-color, #111111);
-    --hint: var(--tg-theme-hint-color, #7a7f87);
-    --btn: var(--tg-theme-button-color, #2481cc);
-    --btn-text: var(--tg-theme-button-text-color, #ffffff);
-    --up: #1a9d5b;
-    --down: #d6453d;
-    --flat: #c98a12;
+    --sea: #0b5a86; --sea-d: #073f5e; --sky: #5bbff2; --sky-l: #ddf1fc;
+    --bg: #eaf5fb; --card: #ffffff; --text: #0a2b3f; --muted: #587a8f; --line: #d2e6f1;
+    --bar: #0b5a86; --bar-hi: #5bbff2; --ma: #c79a1e;
+    --buy: #12906a; --sell: #d4503f; --wait: #c98a12; --hold: #0b5a86;
+    --buy-bg: #e1f5ee; --sell-bg: #fbe8e5; --wait-bg: #fbf0d9; --hold-bg: #ddf1fc;
+    --shadow: 0 1px 2px rgba(7, 63, 94, .08), 0 4px 14px rgba(7, 63, 94, .06);
   }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg2); color: var(--text); font: 15px/1.45 -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; padding: 12px 12px 28px; }
-  .card { background: var(--bg); border-radius: 14px; padding: 14px; margin-bottom: 10px; }
-  h2 { font-size: 13px; font-weight: 600; color: var(--hint); text-transform: uppercase; letter-spacing: .04em; margin: 0 0 8px; }
-  .hero { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
-  .price { font-size: 32px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
-  .sub { color: var(--hint); font-size: 13px; }
-  .badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-weight: 700; font-size: 13px; color: #fff; }
-  .bullish { background: var(--up); } .bearish { background: var(--down); } .neutral { background: var(--flat); }
-  .action { margin-top: 10px; font-weight: 700; }
-  .note { color: var(--hint); font-size: 13px; margin-top: 2px; }
-  .zones { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .zone { border-radius: 12px; padding: 12px; border: 1.5px solid; }
-  .zone.buy { border-color: var(--up); } .zone.sell { border-color: var(--down); }
-  .zone .lbl { font-size: 12px; font-weight: 600; } .zone.buy .lbl { color: var(--up); } .zone.sell .lbl { color: var(--down); }
-  .zone .val { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 2px; }
-  .meta { display: flex; justify-content: space-between; margin-top: 10px; font-size: 13px; color: var(--hint); }
-  canvas { width: 100%; height: 190px; display: block; }
-  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
-  td, th { padding: 6px 0; text-align: right; font-size: 14px; } th { color: var(--hint); font-weight: 500; font-size: 12px; }
-  td:first-child, th:first-child { text-align: left; }
-  .bar { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-size: 13px; }
-  .bar .name { width: 74px; color: var(--hint); }
-  .track { position: relative; flex: 1; height: 8px; background: var(--bg2); border-radius: 4px; }
-  .fill { position: absolute; top: 0; height: 8px; border-radius: 4px; }
-  .track::after { content: ""; position: absolute; left: 50%; top: -2px; width: 1px; height: 12px; background: var(--hint); opacity: .5; }
-  .bar .num { width: 44px; text-align: right; font-variant-numeric: tabular-nums; }
-  .driver { padding: 7px 0; border-top: 1px solid var(--bg2); font-size: 14px; }
-  .driver:first-of-type { border-top: 0; }
-  .driver b.up { color: var(--up); } .driver b.down { color: var(--down); }
-  a { color: var(--btn); text-decoration: none; }
-  .head { padding: 5px 0; font-size: 13px; }
-  .disc { color: var(--hint); font-size: 12px; text-align: center; padding: 6px 10px; }
-  button { background: var(--btn); color: var(--btn-text); border: 0; border-radius: 10px; padding: 10px 14px; font-size: 14px; font-weight: 600; width: 100%; }
-  button:disabled { opacity: .6; }
-  #err { color: var(--down); text-align: center; padding: 30px 10px; }
-  .skeleton { color: var(--hint); text-align: center; padding: 40px 0; }
+  :root[data-theme="dark"] {
+    --sea: #4fb3ea; --sea-d: #bfe6fa; --sky: #5bbff2; --sky-l: #0f3a53;
+    --bg: #07202f; --card: #0d2d41; --text: #e6f4fb; --muted: #8fb2c6; --line: #17435d;
+    --bar: #4fb3ea; --bar-hi: #bfe6fa; --ma: #e2b13c;
+    --buy: #3ecf9f; --sell: #ff8a7a; --wait: #f0b84a; --hold: #7fcdf5;
+    --buy-bg: #0e3a33; --sell-bg: #45201c; --wait-bg: #40310f; --hold-bg: #0f3a53;
+    --shadow: none;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html { background: var(--bg); }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 15px/1.55 "Kantumruy Pro", -apple-system, system-ui, "Segoe UI", Roboto, "Noto Sans Khmer", sans-serif;
+    padding-bottom: calc(76px + env(safe-area-inset-bottom));
+  }
+  main { max-width: 540px; margin: 0 auto; padding: 0 14px; }
+  header { max-width: 540px; margin: 0 auto; padding: 14px 14px 6px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  header h1 { font-size: 18px; margin: 0; line-height: 1.25; font-weight: 700; }
+  header h1 small { display: block; font-size: 12px; font-weight: 500; color: var(--muted); }
+  .seg { display: inline-flex; background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 2px; }
+  .seg button { border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 13px; font-weight: 600; padding: 5px 12px; border-radius: 999px; cursor: pointer; }
+  .seg button.on { background: var(--sea); color: #fff; }
+  :root[data-theme="dark"] .seg button.on { color: #052233; }
+
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 16px; margin: 10px 0; box-shadow: var(--shadow); }
+  .card h2 { font-size: 13px; font-weight: 600; color: var(--muted); margin: 0 0 10px; letter-spacing: .02em; }
+  .hero { background: linear-gradient(135deg, var(--sea-d), var(--sea) 60%, #2a8fc7); color: #fff; border: 0; }
+  :root[data-theme="dark"] .hero { background: linear-gradient(135deg, #0a3a56, #0f4f75 60%, #1a6f9f); }
+  .hero h2 { color: #cfeaf9; }
+  .price { font-size: 38px; font-weight: 700; line-height: 1.1; letter-spacing: -.01em; font-variant-numeric: tabular-nums; }
+  .price small { font-size: 15px; font-weight: 500; color: #cfeaf9; margin-left: 4px; }
+  .subprices { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 8px; font-size: 15px; font-variant-numeric: tabular-nums; }
+  .subprices b { font-weight: 600; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+  .chip { font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: rgba(255,255,255,.16); color: #fff; font-variant-numeric: tabular-nums; }
+  .asof { margin-top: 10px; font-size: 12px; color: #cfeaf9; }
+
+  .badge { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
+  .badge.buy { background: var(--buy-bg); color: var(--buy); }
+  .badge.sell { background: var(--sell-bg); color: var(--sell); }
+  .badge.wait { background: var(--wait-bg); color: var(--wait); }
+  .badge.hold { background: var(--hold-bg); color: var(--hold); }
+  .decision { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .decision .label { font-size: 17px; font-weight: 700; line-height: 1.3; }
+  .why { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .plan { margin-top: 10px; padding: 10px 12px; border-radius: 12px; background: var(--sky-l); font-size: 14px; }
+  .note { font-size: 13px; color: var(--muted); margin-top: 8px; }
+  .warn { font-size: 13px; color: var(--wait); margin-top: 8px; }
+
+  .scale { margin: 14px 0 6px; }
+  .scale .row { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 4px; }
+  .scale .row b { font-variant-numeric: tabular-nums; }
+  .track { position: relative; height: 10px; border-radius: 6px; overflow: hidden; display: flex; }
+  .track i { display: block; height: 100%; }
+  .track .z-buy { background: var(--buy-bg); } .track .z-hold { background: var(--hold-bg); }
+  .track .z-wait { background: var(--wait-bg); } .track .z-sell { background: var(--sell-bg); }
+  .marker { position: relative; height: 0; }
+  .marker span { position: absolute; top: -15px; width: 4px; height: 20px; margin-left: -2px; border-radius: 2px; background: var(--text); }
+  .ticks { position: relative; height: 16px; font-size: 11px; color: var(--muted); margin-top: 8px; font-variant-numeric: tabular-nums; }
+  .ticks span { position: absolute; top: 0; white-space: nowrap; }
+
+  ul.reasons { margin: 8px 0 0; padding-left: 18px; }
+  ul.reasons li { margin-bottom: 6px; }
+  .kv { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; font-size: 14px; }
+  .kv span:nth-child(odd) { color: var(--muted); }
+  .kv span:nth-child(even) { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .srcs a { color: var(--sea); font-size: 13px; display: inline-block; margin: 2px 10px 2px 0; word-break: break-word; }
+  :root[data-theme="dark"] .srcs a { color: var(--sky); }
+  .pos { color: var(--buy); } .neg { color: var(--sell); }
+  pre.report { white-space: pre-wrap; word-break: break-word; font: inherit; font-size: 13.5px; margin: 0; }
+
+  .rangebar { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
+  .pill { border: 1px solid var(--line); background: var(--card); color: var(--text); font: inherit; font-size: 13px; font-weight: 600; padding: 5px 12px; border-radius: 999px; cursor: pointer; }
+  .pill.on { background: var(--sea); border-color: var(--sea); color: #fff; }
+  :root[data-theme="dark"] .pill.on { color: #052233; }
+  .custom { display: none; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .custom.show { display: flex; }
+  .custom label { font-size: 12px; color: var(--muted); display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 130px; }
+  #chartBox { position: relative; width: 100%; touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+  #chartBox svg { display: block; width: 100%; height: auto; }
+  #tip { position: absolute; pointer-events: none; display: none; background: var(--text); color: var(--bg); border-radius: 10px; padding: 6px 10px; font-size: 12px; line-height: 1.45; white-space: nowrap; z-index: 3; font-variant-numeric: tabular-nums; }
+  #tip b { font-size: 14px; }
+  .legend { display: flex; gap: 14px; font-size: 12px; color: var(--muted); margin-top: 6px; flex-wrap: wrap; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+  .stats div { background: var(--sky-l); border-radius: 12px; padding: 8px 10px; font-size: 12px; color: var(--muted); }
+  .stats b { display: block; font-size: 15px; color: var(--text); font-variant-numeric: tabular-nums; }
+
+  label.f { display: block; font-size: 13px; color: var(--muted); margin: 10px 0 4px; }
+  input, select { width: 100%; font: inherit; font-size: 16px; color: var(--text); background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+  input:focus, select:focus { outline: 2px solid var(--sky); border-color: var(--sky); }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .btn { display: block; width: 100%; margin-top: 12px; border: 0; border-radius: 12px; padding: 12px 14px; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; background: linear-gradient(135deg, var(--sea), #2a8fc7); color: #fff; }
+  :root[data-theme="dark"] .btn { color: #052233; background: linear-gradient(135deg, #4fb3ea, #8fd3f7); }
+  .btn.ghost { background: transparent; color: var(--sea); border: 1px solid var(--line); }
+  :root[data-theme="dark"] .btn.ghost { color: var(--sky); }
+  .btn:disabled { opacity: .55; }
+  .msg { font-size: 13px; margin-top: 8px; min-height: 18px; color: var(--sell); }
+  .msg.ok { color: var(--buy); }
+  .toggles label { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+  .toggles label:last-child { border-bottom: 0; }
+  .toggles input { width: 22px; height: 22px; accent-color: var(--sea); }
+  .tx { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 14px; font-variant-numeric: tabular-nums; }
+  .tx:last-child { border-bottom: 0; }
+  .tx small { color: var(--muted); display: block; font-size: 12px; }
+  .lock { text-align: center; padding: 8px 4px 4px; }
+  .lock .ico { font-size: 34px; }
+  .lock h3 { margin: 6px 0 4px; font-size: 17px; }
+  .lock p { margin: 0 0 8px; font-size: 13px; color: var(--muted); }
+  .empty { text-align: center; color: var(--muted); padding: 22px 8px; font-size: 14px; }
+  .disc { font-size: 12px; color: var(--muted); text-align: center; padding: 8px 12px 18px; }
+
+  nav { position: fixed; left: 0; right: 0; bottom: 0; background: var(--card); border-top: 1px solid var(--line); display: flex; justify-content: center; padding-bottom: env(safe-area-inset-bottom); z-index: 5; }
+  nav .in { display: flex; width: 100%; max-width: 540px; }
+  nav button { flex: 1; border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 12px; font-weight: 600; padding: 8px 2px 9px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  nav button .i { font-size: 20px; line-height: 1.1; }
+  nav button.on { color: var(--sea); }
+  :root[data-theme="dark"] nav button.on { color: var(--sky); }
+
+  #sheet { position: fixed; inset: 0; background: rgba(4, 20, 30, .55); display: none; align-items: flex-end; justify-content: center; z-index: 10; }
+  #sheet.show { display: flex; }
+  #sheet .box { background: var(--card); width: 100%; max-width: 540px; border-radius: 20px 20px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); }
+  #sheet code { display: block; white-space: pre-wrap; word-break: break-all; background: var(--sky-l); border-radius: 10px; padding: 10px; font-size: 14px; margin: 10px 0; user-select: all; }
+  #toast { position: fixed; left: 50%; bottom: calc(86px + env(safe-area-inset-bottom)); transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 8px 16px; border-radius: 999px; font-size: 13px; z-index: 20; display: none; max-width: 90%; text-align: center; }
 </style>
 </head>
 <body>
-<div id="app"><div class="skeleton">Analysing news and prices…</div></div>
+<header>
+  <h1 id="title"></h1>
+  <div class="seg" role="group" aria-label="Language"><button id="lk" data-act="lang" data-v="km">ខ្មែរ</button><button id="le" data-act="lang" data-v="en">EN</button></div>
+</header>
+<main id="view"></main>
+<nav><div class="in" id="tabs"></div></nav>
+<div id="sheet"><div class="box" id="sheetBox"></div></div>
+<div id="toast"></div>
+
 <script>
-const tg = window.Telegram && Telegram.WebApp;
-if (tg) { tg.ready(); tg.expand(); }
+// <core>
+// Pure logic. Kept free of the DOM so tests can run it in Node and compare it with scripts/decide.py.
+const OZ_G = 31.1034768, CHI_G = 3.75, CHI_PER_OZ = OZ_G / CHI_G;
+function ozToChi(p) { return p / CHI_PER_OZ; }
+function r2(x) { return Math.round(x * 100) / 100; }
 
-const $ = (id) => document.getElementById(id);
-const money = (n) => "$" + Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const money0 = (n) => "$" + Math.round(n).toLocaleString("en-US");
-const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-const safeUrl = (u) => (/^https?:\/\//i.test(u) ? u : "#");
-
-async function load(refresh = false) {
-  const res = await fetch("/api/forecast" + (refresh ? "?refresh=true" : ""), {
-    headers: { "X-Telegram-Init-Data": tg ? tg.initData : "" },
-  });
-  if (!res.ok) {
-    let msg = "Could not load the forecast.";
-    try { msg = (await res.json()).detail || msg; } catch (e) {}
-    throw new Error(msg);
+function holdings(purchases) {
+  let qty = 0, cost = 0, realized = 0;
+  const list = [...purchases].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0) || ((a.id || 0) - (b.id || 0)));
+  for (const p of list) {
+    const chi = +p.chi, price = +p.price;
+    if (p.type === 'buy') { qty += chi; cost += chi * price; }
+    else {
+      const avg = qty > 0 ? cost / qty : price;
+      const sold = Math.min(chi, qty);
+      realized += sold * (price - avg);
+      qty -= sold; cost -= sold * avg;
+    }
   }
-  return res.json();
+  qty = Math.round(qty * 1e6) / 1e6;
+  return { chi: Math.max(qty, 0), avg_cost: qty > 0 ? cost / qty : 0, invested: qty > 0 ? cost : 0, realized };
 }
 
-function scoreBar(name, v) {
-  const pct = Math.min(Math.abs(v), 1) * 50;
-  const color = v >= 0 ? "var(--up)" : "var(--down)";
-  const style = v >= 0 ? `left:50%;width:${pct}%` : `left:${50 - pct}%;width:${pct}%`;
-  return `<div class="bar"><span class="name">${name}</span><div class="track"><div class="fill" style="${style};background:${color}"></div></div><span class="num">${v >= 0 ? "+" : ""}${v.toFixed(2)}</span></div>`;
+// First matching rule wins. Mirrors scripts/decide.py (same thresholds).
+function decide(m, hold, refChi, monthly) {
+  const price = +m.price_oz, ma200 = +m.ma200, high = +m.high3m;
+  if (!(price > 0 && ma200 > 0 && high > 0)) throw new Error('market data is incomplete');
+  hold = hold || { chi: 0, avg_cost: 0 };
+  const above = price / ma200 - 1, fromHigh = 1 - price / high;
+  let profit = null;
+  if (hold.chi > 0 && hold.avg_cost > 0 && refChi) profit = refChi / hold.avg_cost - 1;
+  const core = hold.chi * 0.30, sellable = Math.max(hold.chi - core, 0);
+  const out = { rule: 5, action: 'HOLD', buy_chi: +monthly, sell_chi: 0, steps: 1, core_chi: r2(core), above_200: above, from_high: fromHigh, profit };
+  if (profit !== null && profit >= 0.50 && above >= 0.20) Object.assign(out, { rule: 1, action: 'SELL_STEPS', buy_chi: 0, steps: 3, sell_chi: sellable / 3 });
+  else if (above >= 0.25) Object.assign(out, { rule: 2, action: 'REDUCE', buy_chi: 0, sell_chi: Math.min(hold.chi * 0.15, sellable) });
+  else if (above >= 0.15) Object.assign(out, { rule: 3, action: 'WAIT', buy_chi: monthly * 0.5 });
+  else if (price < ma200) Object.assign(out, { rule: 4, action: 'BUY_STEPS', buy_chi: monthly * 2, steps: 3 });
+  else if (fromHigh >= 0.08) Object.assign(out, { rule: 4, action: 'BUY_EXTRA', buy_chi: monthly * 1.5, steps: 2 });
+  out.buy_chi = r2(out.buy_chi); out.sell_chi = r2(out.sell_chi);
+  return out;
 }
 
-function render(f) {
-  const lv = f.levels;
-  const drivers = f.news.drivers.map((d) => {
-    const up = d.direction === "bullish";
-    return `<div class="driver"><b class="${up ? "up" : "down"}">${up ? "▲" : "▼"} ${esc(d.theme)}</b><div class="sub">${esc(d.why)}</div></div>`;
-  }).join("");
-  const heads = f.news.headlines.map((h) => `<div class="head"><a href="${esc(safeUrl(h.link))}" target="_blank" rel="noopener">${esc(h.title)}</a></div>`).join("");
-  const hz = ["1d", "1w", "1m"].map((k) => {
-    const h = f.horizons[k];
-    return `<tr><td>${{ "1d": "Tomorrow", "1w": "1 week", "1m": "1 month" }[k]}</td><td><b>${money0(h.expected)}</b></td><td class="sub">${money0(h.low)} – ${money0(h.high)}</td></tr>`;
-  }).join("");
-  const mac = Object.entries(f.macro).map(([k, c]) => scoreBar({ dxy: "Dollar", us10y: "10y yield", vix: "Fear (VIX)" }[k] || k, c.score)).join("");
+function b64ToBytes(s) { return Uint8Array.from(atob(s), c => c.charCodeAt(0)); }
 
-  $("app").innerHTML = `
-    <div class="card">
-      <div class="hero">
-        <div><div class="sub">Gold (XAU/USD)</div><div class="price">${money(f.price)}</div></div>
-        <div style="text-align:right"><span class="badge ${f.bias}">${f.bias.toUpperCase()}</span><div class="sub" style="margin-top:4px">${f.confidence} confidence</div></div>
-      </div>
-      <div class="action">${esc(f.action)}</div>
-      <div class="note">${esc(f.note)}</div>
-    </div>
+// data/private.enc: {"v":1,"kdf":"PBKDF2-SHA256","iter":N,"salt":b64,"iv":b64,"ct":b64}; ct = AES-256-GCM ciphertext + tag
+async function decryptVault(pass, text) {
+  const box = JSON.parse(text);
+  if (box.v !== 1 || box.kdf !== 'PBKDF2-SHA256') throw new Error('unsupported vault format');
+  const iter = +box.iter;
+  if (!(iter >= 100000 && iter <= 5000000)) throw new Error('unsupported vault format');
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey']);
+  const key = await crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt: b64ToBytes(box.salt), iterations: iter, hash: 'SHA-256' },
+    base, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+  const plain = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64ToBytes(box.iv) }, key, b64ToBytes(box.ct));
+  return JSON.parse(new TextDecoder().decode(plain));
+}
+// </core>
+</script>
 
-    <div class="card">
-      <h2>Suggested prices</h2>
-      <div class="zones">
-        <div class="zone buy"><div class="lbl">BUY ZONE</div><div class="val">${money0(lv.buy_zone[0])} – ${money0(lv.buy_zone[1])}</div></div>
-        <div class="zone sell"><div class="lbl">SELL ZONE</div><div class="val">${money0(lv.sell_zone[0])} – ${money0(lv.sell_zone[1])}</div></div>
-      </div>
-      <div class="meta"><span>Stop-loss ${money0(lv.stop)}</span><span>Reward/risk ${lv.reward_risk}</span></div>
-    </div>
+<script>
+(() => {
+'use strict';
 
-    <div class="card"><h2>Last 90 days</h2><canvas id="chart"></canvas></div>
+const tg = window.Telegram && window.Telegram.WebApp;
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const safeUrl = (u) => (/^https:\/\//i.test(String(u)) ? String(u) : '#');
 
-    <div class="card">
-      <h2>Price outlook</h2>
-      <table><tr><th></th><th>Expected</th><th>Typical range</th></tr>${hz}</table>
-    </div>
+/* ---------- text ---------- */
+const T = {
+  en: {
+    title: 'Gold Cambodia Price', sub: 'Physical gold · $/oz · $/chi · KHR',
+    tab_home: 'Home', tab_chart: 'Chart', tab_mine: 'My gold', tab_alerts: 'Alerts',
+    world: 'World gold price', per_oz: 'per oz', per_chi: 'per chi', khr_chi: 'KHR per chi',
+    d1: '1 day', w1: '1 week', m1: '1 month', updated: 'Updated',
+    vs200: 'vs 200-day average', vs3m: 'vs 3-month high',
+    market_rules: 'Price rules (market only)', your_decision: 'Your decision', plan: 'Plan',
+    claude: "Claude's reading of the news", confidence: 'Confidence', high: 'high', medium: 'medium', low: 'low',
+    outlook: 'Outlook', week: 'This week', month: 'This month', year: 'This year', sources: 'Sources',
+    stale: 'No fresh Claude analysis yet; the decision uses the price rules only.',
+    soft: 'Claude suggests a softer plan (half size) because of news or uncertainty.',
+    no_market: 'Waiting for the first data update. On GitHub: Actions → market → Run workflow.',
+    old_market: 'Price data is more than 3 days old.',
+    disclaimer: 'Not financial advice. Gold prices can move sharply.',
+    zones: 'Where the price sits', z_buy: 'buy', z_wait: 'wait', z_red: 'reduce',
+    chart_unit: 'USD per oz (closing price)', daily: 'Daily', weekly: 'Weekly', custom: 'Custom', from: 'From', to: 'To',
+    change: 'Change', high_: 'High', low_: 'Low', ma200: '200-day average', price_: 'Close', no_hist: 'No price history yet.',
+    locked: 'Private data is locked', lock_hint: 'Enter your passphrase. It is checked on this phone only and is never sent anywhere.',
+    passphrase: 'Passphrase', unlock: 'Unlock', lock_now: 'Lock',
+    bio_unlock: 'Unlock with Face ID / fingerprint', bio_enable: 'Enable Face ID / fingerprint unlock', bio_disable: 'Turn off Face ID / fingerprint',
+    bio_note: 'Your passphrase is kept in Telegram’s secure storage on this device.', bio_reason: 'Unlock your gold records',
+    bio_on: 'Face ID / fingerprint unlock is on.', bio_off: 'Face ID / fingerprint unlock is off.',
+    wrong_pass: 'Wrong passphrase or damaged data.', load_error: 'Could not load the private data. Try again.',
+    no_vault: 'No private data yet. Send /start to the bot, then wait for the next hourly sync.',
+    holdings: 'Gold you hold', amount: 'Amount', avg_cost: 'Average cost', invested: 'Invested', value_now: 'Value now', profit: 'Profit',
+    core: 'Core to keep (30%)', realized: 'Realized so far', basis_bb: 'at shop buyback price', basis_w: 'at world price, estimate',
+    no_hold: 'No holdings recorded yet. Record a trade below.', latest_report: 'Latest report', no_report: 'No report yet.',
+    records: 'Your records', none: 'None yet.', chi_u: 'chi',
+    record: 'Record a trade', buy: 'Buy', sell: 'Sell', chi_amt: 'Amount (chi)', price_chi: 'Price ($ per chi)', date: 'Date',
+    shop: 'Shop prices ($ per chi)', shop_sell: 'Shop sells at', shop_bb: 'Shop buys back at', monthly: 'Monthly buy (chi)',
+    send: 'Send to bot', save: 'Save', sent_note: 'The app closes after sending. The bot applies it within about an hour.',
+    copy_title: 'Send this to the bot', copy_hint: 'Open the bot chat from the “📊 Gold Cambodia” keyboard button to send forms directly. Or copy this text and send it as a message:',
+    copy: 'Copy', copied: 'Copied', close: 'Close',
+    bad_num: 'Enter a positive number.', bad_date: 'Use a date that is not in the future.', bb_high: 'Buyback cannot be higher than the sell price.',
+    sell_more: 'You only hold less than that.',
+    report_time: 'Report time (Cambodia)', language: 'Report language', reports_to: 'Reports to receive',
+    weekly_r: 'Weekly', monthly_r: 'Monthly buy day', watchdog_r: 'Watchdog alerts', save_settings: 'Save settings', no_change: 'Nothing changed.',
+    price_alerts: 'Price alerts', below: 'Below', above: 'Above', level: 'Level', unit: 'Unit', add_alert: 'Add alert', clear_alerts: 'Clear all alerts',
+    no_alerts: 'No price alerts set.', fired: 'sent', applied: 'Changes are applied when the bot next syncs (within about an hour).',
+    both: 'Khmer + English',
+  },
+  km: {
+    title: 'តម្លៃមាសកម្ពុជា', sub: 'មាសពិត · $/អោន · $/ជី · រៀល',
+    tab_home: 'ទំព័រដើម', tab_chart: 'ក្រាហ្វ', tab_mine: 'មាសខ្ញុំ', tab_alerts: 'ជូនដំណឹង',
+    world: 'តម្លៃមាសពិភពលោក', per_oz: 'ក្នុងមួយអោន', per_chi: 'ក្នុងមួយជី', khr_chi: 'រៀលក្នុងមួយជី',
+    d1: '1 ថ្ងៃ', w1: '1 សប្ដាហ៍', m1: '1 ខែ', updated: 'ធ្វើបច្ចុប្បន្នភាព',
+    vs200: 'ធៀបនឹងមធ្យមភាគ 200 ថ្ងៃ', vs3m: 'ធៀបនឹងកម្រិតខ្ពស់ 3 ខែ',
+    market_rules: 'ច្បាប់តម្លៃ (ទីផ្សារតែប៉ុណ្ណោះ)', your_decision: 'សេចក្តីសម្រេចសម្រាប់អ្នក', plan: 'ផែនការ',
+    claude: 'ការវិភាគព័ត៌មានដោយ Claude', confidence: 'ទំនុកចិត្ត', high: 'ខ្ពស់', medium: 'មធ្យម', low: 'ទាប',
+    outlook: 'ទស្សនវិស័យ', week: 'សប្ដាហ៍នេះ', month: 'ខែនេះ', year: 'ឆ្នាំនេះ', sources: 'ប្រភព',
+    stale: 'មិនទាន់មានការវិភាគថ្មីពី Claude ទេ ការសម្រេចនេះប្រើតែច្បាប់តម្លៃប៉ុណ្ណោះ។',
+    soft: 'Claude ណែនាំឱ្យធ្វើផែនការស្រាលជាងមុន (ពាក់កណ្ដាល) ដោយសារព័ត៌មាន ឬភាពមិនប្រាកដប្រជា។',
+    no_market: 'កំពុងរង់ចាំទិន្នន័យដំបូង។ នៅលើ GitHub៖ Actions → market → Run workflow។',
+    old_market: 'ទិន្នន័យតម្លៃចាស់ជាង 3 ថ្ងៃ។',
+    disclaimer: 'នេះមិនមែនជាដំបូន្មានហិរញ្ញវត្ថុទេ។ តម្លៃមាសអាចប្រែប្រួលខ្លាំង។',
+    zones: 'ទីតាំងនៃតម្លៃ', z_buy: 'ទិញ', z_wait: 'រង់ចាំ', z_red: 'កាត់បន្ថយ',
+    chart_unit: 'ដុល្លារក្នុងមួយអោន (តម្លៃបិទ)', daily: 'រាល់ថ្ងៃ', weekly: 'រាល់សប្ដាហ៍', custom: 'ផ្ទាល់ខ្លួន', from: 'ពី', to: 'ដល់',
+    change: 'ការផ្លាស់ប្ដូរ', high_: 'ខ្ពស់បំផុត', low_: 'ទាបបំផុត', ma200: 'មធ្យមភាគ 200 ថ្ងៃ', price_: 'តម្លៃបិទ', no_hist: 'មិនទាន់មានប្រវត្តិតម្លៃទេ។',
+    locked: 'ទិន្នន័យឯកជនត្រូវបានចាក់សោ', lock_hint: 'បញ្ចូលឃ្លាសម្ងាត់របស់អ្នក។ វាត្រូវបានពិនិត្យលើទូរស័ព្ទនេះប៉ុណ្ណោះ ហើយមិនត្រូវបានផ្ញើទៅកន្លែងណាទេ។',
+    passphrase: 'ឃ្លាសម្ងាត់', unlock: 'ដោះសោ', lock_now: 'ចាក់សោ',
+    bio_unlock: 'ដោះសោដោយ Face ID / ស្នាមម្រាមដៃ', bio_enable: 'បើកការដោះសោដោយ Face ID / ស្នាមម្រាមដៃ', bio_disable: 'បិទការដោះសោដោយ Face ID / ស្នាមម្រាមដៃ',
+    bio_note: 'ឃ្លាសម្ងាត់របស់អ្នកត្រូវបានរក្សាទុកក្នុងកន្លែងរក្សាទុកសុវត្ថិភាពរបស់ Telegram លើឧបករណ៍នេះ។', bio_reason: 'ដោះសោកំណត់ត្រាមាសរបស់អ្នក',
+    bio_on: 'ការដោះសោដោយ Face ID / ស្នាមម្រាមដៃបើកហើយ។', bio_off: 'ការដោះសោដោយ Face ID / ស្នាមម្រាមដៃបិទ។',
+    wrong_pass: 'ឃ្លាសម្ងាត់មិនត្រឹមត្រូវ ឬទិន្នន័យខូច។', load_error: 'មិនអាចផ្ទុកទិន្នន័យឯកជនបានទេ។ សូមព្យាយាមម្ដងទៀត។',
+    no_vault: 'មិនទាន់មានទិន្នន័យឯកជនទេ។ សូមផ្ញើ /start ទៅកាន់ប៊ត ហើយរង់ចាំការធ្វើសមកាលកម្មម៉ោងបន្ទាប់។',
+    holdings: 'មាសដែលអ្នកកាន់', amount: 'ចំនួន', avg_cost: 'ថ្លៃដើមមធ្យម', invested: 'ទុនវិនិយោគ', value_now: 'តម្លៃឥឡូវ', profit: 'ចំណេញ/ខាត',
+    core: 'ស្នូលត្រូវរក្សា (30%)', realized: 'ចំណេញ/ខាតជាក់ស្តែង', basis_bb: 'តាមតម្លៃហាងទិញចូល', basis_w: 'តាមតម្លៃពិភពលោក (ប៉ាន់ស្មាន)',
+    no_hold: 'មិនទាន់មានកំណត់ត្រាមាសទេ។ សូមកត់ត្រាការទិញខាងក្រោម។', latest_report: 'របាយការណ៍ចុងក្រោយ', no_report: 'មិនទាន់មានរបាយការណ៍ទេ។',
+    records: 'កំណត់ត្រារបស់អ្នក', none: 'មិនទាន់មាន។', chi_u: 'ជី',
+    record: 'កត់ត្រាការទិញលក់', buy: 'ទិញ', sell: 'លក់', chi_amt: 'ចំនួន (ជី)', price_chi: 'តម្លៃ ($ ក្នុងមួយជី)', date: 'កាលបរិច្ឆេទ',
+    shop: 'តម្លៃហាង ($ ក្នុងមួយជី)', shop_sell: 'ហាងលក់ក្នុងតម្លៃ', shop_bb: 'ហាងទិញចូលក្នុងតម្លៃ', monthly: 'ទិញប្រចាំខែ (ជី)',
+    send: 'ផ្ញើទៅប៊ត', save: 'រក្សាទុក', sent_note: 'កម្មវិធីនឹងបិទបន្ទាប់ពីផ្ញើ។ ប៊តនឹងអនុវត្តក្នុងរយៈពេលប្រមាណមួយម៉ោង។',
+    copy_title: 'ផ្ញើអត្ថបទនេះទៅប៊ត', copy_hint: 'បើកកម្មវិធីពីប៊ូតុងក្តារចុច “📊 Gold Cambodia” ក្នុងឆាតប៊ត ដើម្បីផ្ញើទម្រង់ដោយផ្ទាល់។ ឬចម្លងអត្ថបទនេះហើយផ្ញើជាសារ៖',
+    copy: 'ចម្លង', copied: 'បានចម្លង', close: 'បិទ',
+    bad_num: 'សូមបញ្ចូលលេខវិជ្ជមាន។', bad_date: 'សូមប្រើកាលបរិច្ឆេទដែលមិនមែនអនាគត។', bb_high: 'តម្លៃទិញចូលមិនអាចខ្ពស់ជាងតម្លៃលក់ទេ។',
+    sell_more: 'អ្នកមានមាសតិចជាងនេះ។',
+    report_time: 'ម៉ោងទទួលរបាយការណ៍ (ម៉ោងកម្ពុជា)', language: 'ភាសារបាយការណ៍', reports_to: 'របាយការណ៍ដែលត្រូវទទួល',
+    weekly_r: 'ប្រចាំសប្ដាហ៍', monthly_r: 'ថ្ងៃទិញប្រចាំខែ', watchdog_r: 'ការជូនដំណឹងពិសេស', save_settings: 'រក្សាទុកការកំណត់', no_change: 'គ្មានអ្វីប្ដូរទេ។',
+    price_alerts: 'ការជូនដំណឹងតម្លៃ', below: 'ក្រោម', above: 'លើស', level: 'កម្រិត', unit: 'ឯកតា', add_alert: 'បន្ថែមការជូនដំណឹង', clear_alerts: 'លុបការជូនដំណឹងទាំងអស់',
+    no_alerts: 'មិនទាន់មានការជូនដំណឹងតម្លៃទេ។', fired: 'បានផ្ញើ', applied: 'ការផ្លាស់ប្ដូរនឹងមានប្រសិទ្ធភាពពេលប៊តធ្វើសមកាលកម្មលើកក្រោយ (ក្នុងរយៈពេលប្រមាណមួយម៉ោង)។',
+    both: 'ខ្មែរ + អង់គ្លេស',
+  },
+};
+// same wording as scripts/compose.py
+const LABEL = {
+  SELL_STEPS: ['SELL in steps', 'លក់ជាជំហានៗ'], REDUCE: ['REDUCE holdings', 'កាត់បន្ថយមាសដែលកាន់'],
+  WAIT: ['WAIT (half the monthly buy)', 'រង់ចាំ (ទិញពាក់កណ្ដាលនៃចំនួនប្រចាំខែ)'],
+  BUY_EXTRA: ['BUY EXTRA (price dipped)', 'ទិញបន្ថែម (តម្លៃធ្លាក់ចុះ)'],
+  BUY_STEPS: ['BUY in steps (below 200-day average)', 'ទិញជាជំហានៗ (ក្រោមមធ្យមភាគ 200 ថ្ងៃ)'],
+  HOLD: ['HOLD / normal monthly buy', 'រក្សាទុក / ទិញធម្មតាប្រចាំខែ'],
+};
+const KIND_CLASS = { SELL_STEPS: 'sell', REDUCE: 'sell', WAIT: 'wait', BUY_EXTRA: 'buy', BUY_STEPS: 'buy', HOLD: 'hold' };
+const RULE_WHY = {
+  1: ['Profit is 50% or more and the price is 20% or more above its 200-day average', 'ចំណេញ 50% ឬលើស ហើយតម្លៃលើសមធ្យមភាគ 200 ថ្ងៃ 20% ឬលើស'],
+  2: ['Price is 25% or more above its 200-day average', 'តម្លៃលើសមធ្យមភាគ 200 ថ្ងៃ 25% ឬលើស'],
+  3: ['Price is 15% or more above its 200-day average', 'តម្លៃលើសមធ្យមភាគ 200 ថ្ងៃ 15% ឬលើស'],
+  '4a': ['Price is below its 200-day average', 'តម្លៃទាបជាងមធ្យមភាគ 200 ថ្ងៃ'],
+  '4b': ['Price is 8% or more below its 3-month high', 'តម្លៃទាបជាងកម្រិតខ្ពស់ 3 ខែ 8% ឬលើស'],
+  5: ['No extreme signal: keep the normal routine', 'គ្មានសញ្ញាខ្លាំង៖ បន្តទម្លាប់ធម្មតា'],
+};
 
-    <div class="card">
-      <h2>What drives the call</h2>
-      ${scoreBar("News", f.scores.news)}${scoreBar("Macro", f.scores.macro)}${scoreBar("Technical", f.scores.technical)}
-      <div class="sub" style="margin-top:6px">Weights: news ${f.weights.news * 100}%, macro ${f.weights.macro * 100}%, technical ${f.weights.technical * 100}%. RSI ${f.technical.rsi.toFixed(0)}.</div>
-      ${mac ? `<div style="margin-top:10px" class="sub">Macro detail (last 5 days)</div>${mac}` : ""}
-    </div>
+/* ---------- state ---------- */
+const state = {
+  lang: 'km', tab: 'home', market: null, hist: [], analysis: null, vault: null, pass: '',
+  range: '3M', bars: 'daily', from: '', to: '', bio: { available: false, saved: false },
+  loaded: false,
+};
+try { const s = localStorage.getItem('gc_lang'); if (s === 'en' || s === 'km') state.lang = s; } catch (e) {}
+const t = (k) => (T[state.lang][k] != null ? T[state.lang][k] : T.en[k] || k);
+const L = (pair) => (state.lang === 'en' ? pair[0] : pair[1]);
 
-    <div class="card">
-      <h2>News read${f.news.method === "claude" ? " · by Claude" : ""}</h2>
-      <p style="margin:0 0 8px">${esc(f.news.summary)}</p>
-      ${drivers}
-    </div>
+/* ---------- formatting ---------- */
+const num = (x) => { const s = (+x).toFixed(2).replace(/\.?0+$/, ''); return s === '' ? '0' : s; };
+const money = (x) => (Math.abs(x) >= 1000 ? '$' + Math.round(x).toLocaleString('en-US') : '$' + (+x).toFixed(1));
+const money2 = (x) => '$' + (+x).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const pct = (x, d = 1) => (x >= 0 ? '+' : '') + (+x).toFixed(d) + '%';
+const signCls = (x) => (x >= 0 ? 'pos' : 'neg');
+function todayPP() { return new Date(Date.now() + 7 * 3600e3).toISOString().slice(0, 10); }
+function addDays(ds, n) { const d = new Date(ds + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
+function shortDate(ds) { const [y, m, d] = ds.split('-'); const M = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; return state.lang === 'en' ? `${+d} ${M[+m - 1]}` : `${d}/${m}`; }
+function fmtStamp(iso) { try { const d = new Date(iso); return new Date(d.getTime() + 7 * 3600e3).toISOString().slice(0, 16).replace('T', ' ') + ' (ICT)'; } catch (e) { return ''; } }
 
-    <div class="card"><h2>Latest headlines</h2>${heads || '<div class="sub">None found.</div>'}</div>
+/* ---------- data ---------- */
+function parseCSV(text) {
+  const lines = text.trim().split(/\r?\n/); const head = lines.shift().split(',');
+  const di = head.indexOf('date'), ci = head.indexOf('close');
+  if (di < 0 || ci < 0) return [];
+  const rows = lines.map((l) => { const c = l.split(','); return { date: c[di], close: parseFloat(c[ci]) }; }).filter((r) => /^\d{4}-\d{2}-\d{2}$/.test(r.date) && isFinite(r.close));
+  rows.sort((a, b) => (a.date < b.date ? -1 : 1));
+  let sum = 0;
+  rows.forEach((r, i) => { sum += r.close; if (i >= 200) sum -= rows[i - 200].close; r.ma = i >= 199 ? sum / 200 : null; });
+  return rows;
+}
+async function getText(url) { const r = await fetch(url + (url.includes('?') ? '&' : '?') + 't=' + Date.now(), { cache: 'no-store' }); if (!r.ok) throw new Error(String(r.status)); return r.text(); }
+async function loadPublic() {
+  const [m, h, a] = await Promise.allSettled([getText('data/market.json'), getText('data/history.csv'), getText('data/analysis.json')]);
+  try { state.market = m.status === 'fulfilled' ? JSON.parse(m.value) : null; } catch (e) { state.market = null; }
+  try { state.hist = h.status === 'fulfilled' ? parseCSV(h.value) : []; } catch (e) { state.hist = []; }
+  try { state.analysis = a.status === 'fulfilled' ? JSON.parse(a.value) : null; } catch (e) { state.analysis = null; }
+  state.loaded = true;
+}
+function analysisFresh() {
+  const a = state.analysis; if (!a) return false;
+  const ts = Date.parse(a.generated_at); return isFinite(ts) && Date.now() - ts <= 4 * 86400e3 && Date.now() - ts > -3600e3;
+}
+function normalizeVault(v) {
+  v = v || {}; v.settings = v.settings || {}; const s = v.settings;
+  s.lang = s.lang || 'both'; s.hour = s.hour || 9; s.monthly_chi = s.monthly_chi || 1;
+  s.notify = Object.assign({ weekly: true, monthly: true, watchdog: true }, s.notify || {});
+  v.shop = v.shop || {}; v.purchases = v.purchases || []; v.alerts = v.alerts || []; v.reports = v.reports || [];
+  return v;
+}
 
-    <button id="refresh">Refresh now</button>
-    <div class="disc">${esc(f.disclaimer)}<br>Updated ${new Date(f.generated_at).toLocaleString()}</div>`;
-
-  drawChart(f);
-  $("refresh").onclick = async (e) => {
-    e.target.disabled = true; e.target.textContent = "Refreshing…";
-    try { render(await load(true)); } catch (err) { e.target.disabled = false; e.target.textContent = "Refresh now"; if (tg && tg.showAlert) tg.showAlert(err.message); }
+/* ---------- decision text (same wording as compose.py) ---------- */
+function planText(d, soften) {
+  const c = { b: num(d.buy_chi), s: num(d.sell_chi), core: num(d.core_chi), steps: d.steps, m: num(state.vault ? state.vault.settings.monthly_chi : 1) };
+  const P = {
+    SELL_STEPS: [`Sell ${c.s} chi now, then repeat in ${c.steps - 1} more steps (about 1 per week) while the price stays high. Keep at least ${c.core} chi as your core.`, `លក់ ${c.s} ជីឥឡូវនេះ ហើយធ្វើបន្តក្នុង ${c.steps - 1} ជំហានទៀត (ប្រហែល 1 ជំហាន/សប្ដាហ៍) ប្រសិនបើតម្លៃនៅខ្ពស់។ រក្សាស្នូលយ៉ាងតិច ${c.core} ជី។`],
+    REDUCE: [`Sell ${c.s} chi. Keep at least ${c.core} chi as your core.`, `លក់ ${c.s} ជី។ រក្សាស្នូលយ៉ាងតិច ${c.core} ជី។`],
+    WAIT: [`Buy ${c.b} chi this month (half of the monthly amount).`, `ទិញ ${c.b} ជីក្នុងខែនេះ (ពាក់កណ្ដាលនៃចំនួនប្រចាំខែ)។`],
+    BUY_EXTRA: [`Buy ${c.b} chi this month in ${c.steps} steps.`, `ទិញ ${c.b} ជីក្នុងខែនេះ ជា ${c.steps} ជំហាន។`],
+    BUY_STEPS: [`Buy ${c.b} chi this month in ${c.steps} steps.`, `ទិញ ${c.b} ជីក្នុងខែនេះ ជា ${c.steps} ជំហាន។`],
+    HOLD: [`Buy the normal ${c.b} chi this month; otherwise hold.`, `ទិញតាមធម្មតា ${c.b} ជីក្នុងខែនេះ បើមិនដូច្នោះទេ រក្សាទុក។`],
   };
+  if (d.action === 'REDUCE' && d.sell_chi === 0) return L(['Do not buy now. If you hold gold, consider selling a little; keep your core.', 'កុំទិញឥឡូវនេះ។ បើអ្នកមានមាស អាចពិចារណាលក់បន្តិច ហើយរក្សាស្នូល។']);
+  return L(P[d.action]);
+}
+function ruleKey(d, m) { return d.rule === 4 ? (+m.price_oz < +m.ma200 ? '4a' : '4b') : d.rule; }
+
+function decisionCard(titleKey, d, m, soften) {
+  const lab = L(LABEL[d.action]);
+  const cls = KIND_CLASS[d.action];
+  let dd = d;
+  if (soften) dd = Object.assign({}, d, { buy_chi: r2(d.buy_chi * 0.5), sell_chi: r2(d.sell_chi * 0.5) });
+  return `<div class="card"><h2>${esc(t(titleKey))}</h2>
+    <div class="decision"><div class="label">${esc(lab)}</div><span class="badge ${cls}">${d.rule === 4 ? '4' : d.rule}</span></div>
+    <div class="why">${esc(L(RULE_WHY[ruleKey(d, m)]))}</div>
+    <div class="plan"><b>${esc(t('plan'))}:</b> ${esc(planText(dd))}</div>
+    ${soften ? `<div class="warn">${esc(t('soft'))}</div>` : ''}
+    ${analysisFresh() ? '' : `<div class="note">${esc(t('stale'))}</div>`}</div>`;
 }
 
-function drawChart(f) {
-  const cv = $("chart"), dpr = window.devicePixelRatio || 1;
-  const W = cv.clientWidth, H = cv.clientHeight;
-  cv.width = W * dpr; cv.height = H * dpr;
-  const g = cv.getContext("2d"); g.scale(dpr, dpr);
-  const css = getComputedStyle(document.documentElement);
-  const up = css.getPropertyValue("--up").trim(), down = css.getPropertyValue("--down").trim(), hint = css.getPropertyValue("--hint").trim() || "#888", btn = css.getPropertyValue("--btn").trim() || "#2481cc";
-  const ys = f.history.close, lv = f.levels;
-  const lo = Math.min(...ys, lv.buy_zone[0], lv.stop) * 0.998, hi = Math.max(...ys, lv.sell_zone[1]) * 1.002;
-  const padL = 6, padR = 44, padT = 6, padB = 16;
-  const X = (i) => padL + (i / (ys.length - 1)) * (W - padL - padR);
-  const Y = (v) => padT + (1 - (v - lo) / (hi - lo)) * (H - padT - padB);
-  const band = (a, b, color) => { g.fillStyle = color; g.globalAlpha = 0.16; g.fillRect(padL, Y(b), W - padL - padR, Y(a) - Y(b)); g.globalAlpha = 1; };
-  band(lv.buy_zone[0], lv.buy_zone[1], up);
-  band(lv.sell_zone[0], lv.sell_zone[1], down);
-  g.strokeStyle = down; g.setLineDash([4, 4]); g.lineWidth = 1; g.globalAlpha = .7;
-  g.beginPath(); g.moveTo(padL, Y(lv.stop)); g.lineTo(W - padR, Y(lv.stop)); g.stroke(); g.setLineDash([]); g.globalAlpha = 1;
-  g.strokeStyle = btn; g.lineWidth = 2; g.lineJoin = "round"; g.beginPath();
-  ys.forEach((v, i) => (i ? g.lineTo(X(i), Y(v)) : g.moveTo(X(i), Y(v)))); g.stroke();
-  g.fillStyle = hint; g.font = "11px system-ui, sans-serif"; g.textAlign = "left";
-  [["buy", (lv.buy_zone[0] + lv.buy_zone[1]) / 2], ["sell", (lv.sell_zone[0] + lv.sell_zone[1]) / 2], ["stop", lv.stop]].forEach(([t, v]) => g.fillText(t, W - padR + 6, Y(v) + 4));
-  g.fillText(f.history.dates[0].slice(5), padL, H - 3);
-  g.textAlign = "right"; g.fillText(f.history.dates[ys.length - 1].slice(5), W - padR, H - 3);
+/* ---------- views ---------- */
+function scaleHTML(label, value, lo, hi, zones, ticks) {
+  const span = hi - lo, clamp = Math.max(lo, Math.min(hi, value));
+  const zs = zones.map(([a, b, c]) => `<i class="z-${c}" style="width:${((b - a) / span) * 100}%"></i>`).join('');
+  return `<div class="scale"><div class="row"><span>${esc(label)}</span><b class="${signCls(value)}">${pct(value)}</b></div>
+    <div class="track">${zs}</div><div class="marker"><span style="left:${((clamp - lo) / span) * 100}%"></span></div>
+    <div class="ticks">${ticks.map((x) => `<span style="left:${((x - lo) / span) * 100}%;transform:translateX(${x <= lo ? '0' : x >= hi ? '-100%' : '-50%'})">${x > 0 ? '+' : ''}${x}%</span>`).join('')}</div></div>`;
 }
 
-load().then(render).catch((e) => { $("app").innerHTML = `<div id="err">${esc(e.message)}</div>`; });
+function viewHome() {
+  const m = state.market;
+  if (!m) return `<div class="card empty">${esc(state.loaded ? t('no_market') : '…')}</div>`;
+  const chi = ozToChi(m.price_oz), khr = Math.round(chi * m.usd_khr / 1000) * 1000;
+  const chg = [['d1', m.change_1d_pct], ['w1', m.change_1w_pct], ['m1', m.change_1m_pct]].filter((x) => x[1] != null)
+    .map(([k, v]) => `<span class="chip">${esc(t(k))} ${pct(v)}</span>`).join('');
+  const age = (Date.parse(todayPP()) - Date.parse(m.date)) / 86400e3;
+  let h = `<div class="card hero"><h2>${esc(t('world'))}</h2>
+    <div class="price">${money2(m.price_oz)}<small>/${L(['oz', 'អោន'])}</small></div>
+    <div class="subprices"><span><b>${money2(chi)}</b> /${L(['chi', 'ជី'])}</span><span><b>${khr.toLocaleString('en-US')}</b> ${L(['KHR/chi', 'រៀល/ជី'])}</span></div>
+    <div class="chips">${chg}</div>
+    <div class="asof">${esc(t('updated'))}: ${esc(fmtStamp(m.asof))}</div></div>`;
+  if (age > 3) h += `<div class="card"><div class="warn" style="margin:0">${esc(t('old_market'))}</div></div>`;
+
+  h += `<div class="card"><h2>${esc(t('zones'))}</h2>
+    ${scaleHTML(t('vs200'), m.above_ma200_pct, -20, 40, [[-20, 0, 'buy'], [0, 15, 'hold'], [15, 25, 'wait'], [25, 40, 'sell']], [-20, 0, 15, 25, 40])}
+    ${scaleHTML(t('vs3m'), m.from_high3m_pct, -20, 0, [[-20, -8, 'buy'], [-8, 0, 'hold']], [-20, -8, 0])}</div>`;
+
+  const soften = analysisFresh() && !!state.analysis.soften;
+  try {
+    h += decisionCard('market_rules', decide(m, null, null, state.vault ? +state.vault.settings.monthly_chi : 1), m, soften);
+    if (state.vault) {
+      const hd = holdings(state.vault.purchases);
+      if (hd.chi > 0) {
+        const ref = +state.vault.shop.buyback || chi;
+        h += decisionCard('your_decision', decide(m, hd, ref, +state.vault.settings.monthly_chi), m, soften);
+      }
+    }
+  } catch (e) { h += `<div class="card empty">${esc(t('no_market'))}</div>`; }
+
+  const a = state.analysis;
+  if (a && analysisFresh()) {
+    const en = state.lang === 'en';
+    const reasons = (en ? a.reasons_en : a.reasons_km) || [];
+    const o = a.outlook || {};
+    const outlook = ['week', 'month', 'year'].filter((k) => o[k]).map((k) => `<div class="tx"><span><small>${esc(t(k))}</small>${esc(o[k][state.lang] || '')}</span></div>`).join('');
+    const src = (a.sources || []).slice(0, 8).map((s) => `<a href="${esc(safeUrl(s.url))}" target="_blank" rel="noopener noreferrer">${esc(s.title)}</a>`).join('');
+    h += `<div class="card"><h2>${esc(t('claude'))}</h2>
+      <p style="margin:0 0 6px">${esc(en ? a.summary_en : a.summary_km)}</p>
+      <div class="note">${esc(t('confidence'))}: <b>${esc(t(['high', 'medium', 'low'].includes(a.confidence) ? a.confidence : 'low'))}</b> · ${esc(fmtStamp(a.generated_at))}</div>
+      <ul class="reasons">${reasons.slice(0, 4).map((x) => `<li>${esc(x)}</li>`).join('')}</ul>
+      ${outlook ? `<h2 style="margin-top:14px">${esc(t('outlook'))}</h2>${outlook}` : ''}
+      ${src ? `<h2 style="margin-top:14px">${esc(t('sources'))}</h2><div class="srcs">${src}</div>` : ''}</div>`;
+  }
+  return h + `<div class="disc">⚠️ ${esc(t('disclaimer'))}</div>`;
+}
+
+function viewChart() {
+  const rb = ['1W', '1M', '3M', '6M', '1Y'].map((r) => `<button class="pill ${state.range === r ? 'on' : ''}" data-act="range" data-v="${r}">${r}</button>`).join('')
+    + `<button class="pill ${state.range === 'custom' ? 'on' : ''}" data-act="range" data-v="custom">${esc(t('custom'))}</button>`;
+  const last = state.hist.length ? state.hist[state.hist.length - 1].date : '';
+  const first = state.hist.length ? state.hist[0].date : '';
+  return `<div class="card"><h2>${esc(t('chart_unit'))}</h2>
+    <div class="rangebar">${rb}</div>
+    <div class="custom ${state.range === 'custom' ? 'show' : ''}" id="customBox">
+      <label>${esc(t('from'))}<input type="date" id="cFrom" min="${first}" max="${last}" value="${esc(state.from || addDays(last || todayPP(), -90))}"></label>
+      <label>${esc(t('to'))}<input type="date" id="cTo" min="${first}" max="${last}" value="${esc(state.to || last)}"></label></div>
+    <div class="rangebar"><div class="seg"><button class="${state.bars === 'daily' ? 'on' : ''}" data-act="bars" data-v="daily">${esc(t('daily'))}</button><button class="${state.bars === 'weekly' ? 'on' : ''}" data-act="bars" data-v="weekly">${esc(t('weekly'))}</button></div></div>
+    <div id="chartBox"></div><div id="chartStats"></div></div>`;
+}
+
+function lockCard() {
+  const bio = state.bio.available && state.bio.saved;
+  return `<div class="card lock"><div class="ico">🔒</div><h3>${esc(t('locked'))}</h3><p>${esc(t('lock_hint'))}</p>
+    ${bio ? `<button class="btn" data-act="bioUnlock">🔐 ${esc(t('bio_unlock'))}</button>` : ''}
+    <label class="f" style="text-align:left" for="pass">${esc(t('passphrase'))}</label>
+    <input id="pass" type="password" autocomplete="current-password" enterkeyhint="go">
+    <button class="btn ${bio ? 'ghost' : ''}" data-act="unlock">${esc(t('unlock'))}</button>
+    <div class="msg" id="lockMsg"></div></div>`;
+}
+
+function viewMine() {
+  if (!state.vault) return lockCard();
+  const v = state.vault, m = state.market, hd = holdings(v.purchases);
+  let h = '';
+  const ref = m ? (+v.shop.buyback || ozToChi(m.price_oz)) : null;
+  if (hd.chi > 0 && ref) {
+    const profit = ref / hd.avg_cost - 1;
+    h += `<div class="card"><h2>${esc(t('holdings'))}</h2><div class="kv">
+      <span>${esc(t('amount'))}</span><span>${num(hd.chi)} ${esc(t('chi_u'))}</span>
+      <span>${esc(t('avg_cost'))}</span><span>${money2(hd.avg_cost)}/${esc(t('chi_u'))}</span>
+      <span>${esc(t('invested'))}</span><span>${money(hd.invested)}</span>
+      <span>${esc(t('value_now'))}</span><span>${money(hd.chi * ref)}</span>
+      <span>${esc(t('profit'))}</span><span class="${signCls(profit)}">${pct(profit * 100)}</span>
+      <span>${esc(t('core'))}</span><span>${num(hd.chi * 0.3)} ${esc(t('chi_u'))}</span>
+      <span>${esc(t('realized'))}</span><span class="${signCls(hd.realized)}">${hd.realized >= 0 ? '+' : '-'}$${Math.abs(Math.round(hd.realized)).toLocaleString('en-US')}</span></div>
+      <div class="note">${esc(v.shop.buyback ? t('basis_bb') : t('basis_w'))}</div></div>`;
+  } else {
+    h += `<div class="card empty">${esc(t('no_hold'))}</div>`;
+  }
+  const rep = [...v.reports].sort((a, b) => String(b.created).localeCompare(String(a.created)))[0];
+  h += `<div class="card"><h2>${esc(t('latest_report'))}</h2>${rep ? `<pre class="report">${esc(state.lang === 'en' ? rep.text_en : rep.text_km)}</pre>` : `<div class="note">${esc(t('no_report'))}</div>`}</div>`;
+
+  h += `<div class="card"><h2>${esc(t('record'))}</h2>
+    <div class="seg" style="width:100%"><button style="flex:1" class="on" id="tBuy" data-act="side" data-v="buy">${esc(t('buy'))}</button><button style="flex:1" id="tSell" data-act="side" data-v="sell">${esc(t('sell'))}</button></div>
+    <div class="row2"><div><label class="f" for="fChi">${esc(t('chi_amt'))}</label><input id="fChi" type="number" inputmode="decimal" step="0.1" min="0"></div>
+    <div><label class="f" for="fPrice">${esc(t('price_chi'))}</label><input id="fPrice" type="number" inputmode="decimal" step="0.5" min="0"></div></div>
+    <label class="f" for="fDate">${esc(t('date'))}</label><input id="fDate" type="date" value="${todayPP()}" max="${todayPP()}">
+    <button class="btn" data-act="sendTrade">${esc(t('send'))}</button><div class="msg" id="tradeMsg"></div></div>`;
+
+  h += `<div class="card"><h2>${esc(t('shop'))}</h2>
+    <div class="row2"><div><label class="f" for="fShopS">${esc(t('shop_sell'))}</label><input id="fShopS" type="number" inputmode="decimal" step="0.5" value="${esc(v.shop.sell || '')}"></div>
+    <div><label class="f" for="fShopB">${esc(t('shop_bb'))}</label><input id="fShopB" type="number" inputmode="decimal" step="0.5" value="${esc(v.shop.buyback || '')}"></div></div>
+    <button class="btn" data-act="sendShop">${esc(t('send'))}</button><div class="msg" id="shopMsg"></div></div>`;
+
+  const tx = [...v.purchases].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : (b.id || 0) - (a.id || 0))).slice(0, 15)
+    .map((p) => `<div class="tx"><span><b class="${p.type === 'buy' ? 'pos' : 'neg'}">${esc(p.type === 'buy' ? t('buy') : t('sell'))}</b> ${num(p.chi)} ${esc(t('chi_u'))}<small>${esc(p.date)}</small></span><span>${money2(p.price)}/${esc(t('chi_u'))}</span></div>`).join('');
+  h += `<div class="card"><h2>${esc(t('records'))}</h2>${tx || `<div class="note">${esc(t('none'))}</div>`}</div>`;
+
+  if (state.bio.available) {
+    h += `<div class="card"><h2>🔐 Face ID / ${L(['fingerprint', 'ស្នាមម្រាមដៃ'])}</h2><div class="note" style="margin-top:0">${esc(state.bio.saved ? t('bio_on') : t('bio_off'))}</div>
+      ${state.bio.saved ? `<button class="btn ghost" data-act="bioOff">${esc(t('bio_disable'))}</button>` : `<button class="btn ghost" data-act="bioOn">${esc(t('bio_enable'))}</button><div class="note">${esc(t('bio_note'))}</div>`}</div>`;
+  }
+  h += `<button class="btn ghost" data-act="lockNow">${esc(t('lock_now'))}</button>`;
+  return h + `<div class="disc">⚠️ ${esc(t('disclaimer'))}</div>`;
+}
+
+function viewAlerts() {
+  if (!state.vault) return lockCard();
+  const v = state.vault, s = v.settings;
+  const hours = Array.from({ length: 13 }, (_, i) => 8 + i).map((h) => `<option value="${h}" ${+s.hour === h ? 'selected' : ''}>${h}:00</option>`).join('');
+  const langs = [['km', 'ខ្មែរ'], ['en', 'English'], ['both', t('both')]].map(([k, n]) => `<option value="${k}" ${s.lang === k ? 'selected' : ''}>${esc(n)}</option>`).join('');
+  const al = v.alerts.map((a) => `<div class="tx"><span><b>${esc(a.dir === 'below' ? t('below') : t('above'))}</b> ${num(a.level)} ${a.unit === 'chi' ? '$/chi' : '$/oz'}</span><span class="note" style="margin:0">${a.fired ? esc(t('fired')) : ''}</span></div>`).join('');
+  return `<div class="card"><h2>${esc(t('report_time'))}</h2>
+      <select id="sHour">${hours}</select>
+      <label class="f" for="sLang">${esc(t('language'))}</label><select id="sLang">${langs}</select>
+      <label class="f" for="sMonthly">${esc(t('monthly'))}</label><input id="sMonthly" type="number" inputmode="decimal" step="0.5" min="0" value="${esc(s.monthly_chi)}">
+      <h2 style="margin-top:16px">${esc(t('reports_to'))}</h2>
+      <div class="toggles">
+        <label>${esc(t('weekly_r'))}<input type="checkbox" id="nWeekly" ${s.notify.weekly ? 'checked' : ''}></label>
+        <label>${esc(t('monthly_r'))}<input type="checkbox" id="nMonthly" ${s.notify.monthly ? 'checked' : ''}></label>
+        <label>${esc(t('watchdog_r'))}<input type="checkbox" id="nWatch" ${s.notify.watchdog ? 'checked' : ''}></label></div>
+      <button class="btn" data-act="sendSettings">${esc(t('save_settings'))}</button><div class="msg" id="setMsg"></div></div>
+    <div class="card"><h2>${esc(t('price_alerts'))}</h2>${al || `<div class="note" style="margin:0 0 8px">${esc(t('no_alerts'))}</div>`}
+      <div class="row2"><div><label class="f" for="aDir">${esc(t('below'))} / ${esc(t('above'))}</label><select id="aDir"><option value="below">${esc(t('below'))}</option><option value="above">${esc(t('above'))}</option></select></div>
+      <div><label class="f" for="aUnit">${esc(t('unit'))}</label><select id="aUnit"><option value="oz">$/oz</option><option value="chi">$/chi</option></select></div></div>
+      <label class="f" for="aLevel">${esc(t('level'))}</label><input id="aLevel" type="number" inputmode="decimal" step="1" min="0">
+      <button class="btn" data-act="sendAlert">${esc(t('add_alert'))}</button>
+      ${v.alerts.length ? `<button class="btn ghost" data-act="clearAlerts">${esc(t('clear_alerts'))}</button>` : ''}
+      <div class="msg" id="alMsg"></div><div class="note">${esc(t('applied'))}</div></div>
+    <button class="btn ghost" data-act="lockNow">${esc(t('lock_now'))}</button>`;
+}
+
+const VIEWS = { home: viewHome, chart: viewChart, mine: viewMine, alerts: viewAlerts };
+const TABS = [['home', '🏠', 'tab_home'], ['chart', '📈', 'tab_chart'], ['mine', '🪙', 'tab_mine'], ['alerts', '🔔', 'tab_alerts']];
+
+function render() {
+  document.documentElement.lang = state.lang;
+  $('#title').innerHTML = `${esc(t('title'))}<small>${esc(t('sub'))}</small>`;
+  $('#lk').classList.toggle('on', state.lang === 'km'); $('#le').classList.toggle('on', state.lang === 'en');
+  $('#tabs').innerHTML = TABS.map(([k, i, n]) => `<button class="${state.tab === k ? 'on' : ''}" data-act="tab" data-v="${k}"><span class="i">${i}</span>${esc(t(n))}</button>`).join('');
+  $('#view').innerHTML = VIEWS[state.tab]();
+  if (state.tab === 'chart') { bindChartInputs(); drawChart(); }
+  window.scrollTo(0, 0);
+}
+
+/* ---------- chart ---------- */
+function chartRows() {
+  const H = state.hist; if (!H.length) return [];
+  const last = H[H.length - 1].date; let from, to = last;
+  if (state.range === 'custom') { from = state.from || addDays(last, -90); to = state.to || last; }
+  else from = addDays(last, -({ '1W': 7, '1M': 30, '3M': 91, '6M': 182, '1Y': 365 }[state.range] || 91));
+  let rows = H.filter((r) => r.date >= from && r.date <= to);
+  if (state.bars === 'weekly') {
+    const g = new Map();
+    for (const r of rows) {
+      const d = new Date(r.date + 'T00:00:00Z'); const key = addDays(r.date, -((d.getUTCDay() + 6) % 7));
+      g.set(key, r); // last trading day of the week wins
+    }
+    rows = [...g.values()];
+  }
+  return rows;
+}
+function niceTicks(lo, hi, n) {
+  const span = hi - lo || 1, raw = span / n, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map((x) => x * mag).find((x) => x >= raw) || mag * 10;
+  const out = []; for (let v = Math.ceil(lo / step) * step; v <= hi + 1e-9; v += step) out.push(v);
+  return out;
+}
+function drawChart() {
+  const box = $('#chartBox'); if (!box) return;
+  const rows = chartRows();
+  if (rows.length < 2) { box.innerHTML = `<div class="empty">${esc(t('no_hist'))}</div>`; $('#chartStats').innerHTML = ''; return; }
+  const W = Math.max(box.clientWidth, 280), H = 260, pl = 46, pr = 8, pt = 8, pb = 22;
+  const vals = rows.flatMap((r) => (r.ma ? [r.close, r.ma] : [r.close]));
+  let lo = Math.min(...vals), hi = Math.max(...vals); const padv = (hi - lo) * 0.06 || 1; lo -= padv; hi += padv;
+  const X = (i) => pl + i * ((W - pl - pr) / rows.length), BW = (W - pl - pr) / rows.length;
+  const Y = (v) => pt + (1 - (v - lo) / (hi - lo)) * (H - pt - pb), base = H - pb;
+  const bw = Math.max(BW * (BW > 6 ? 0.72 : 0.9), 0.8);
+  const ticks = niceTicks(lo, hi, 4);
+  let s = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t('chart_unit'))}">`;
+  ticks.forEach((v) => { s += `<line x1="${pl}" x2="${W - pr}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width="1"/><text x="${pl - 6}" y="${Y(v) + 4}" text-anchor="end" font-size="10.5" fill="var(--muted)">${Math.round(v).toLocaleString('en-US')}</text>`; });
+  rows.forEach((r, i) => { s += `<rect class="bar" data-i="${i}" x="${(X(i) + (BW - bw) / 2).toFixed(2)}" y="${Y(r.close).toFixed(2)}" width="${bw.toFixed(2)}" height="${Math.max(base - Y(r.close), 0.5).toFixed(2)}" rx="${bw > 4 ? 2 : 0}" fill="var(--bar)" opacity="${i === rows.length - 1 ? 1 : 0.82}"/>`; });
+  const maPts = rows.map((r, i) => (r.ma ? `${(X(i) + BW / 2).toFixed(1)},${Y(r.ma).toFixed(1)}` : null)).filter(Boolean);
+  if (maPts.length > 1) s += `<polyline points="${maPts.join(' ')}" fill="none" stroke="var(--ma)" stroke-width="2" stroke-linejoin="round"/>`;
+  const nl = Math.min(4, rows.length);
+  for (let k = 0; k < nl; k++) { const i = Math.round((k * (rows.length - 1)) / Math.max(nl - 1, 1)); s += `<text x="${Math.min(Math.max(X(i) + BW / 2, pl + 14), W - pr - 14)}" y="${H - 6}" text-anchor="middle" font-size="10.5" fill="var(--muted)">${shortDate(rows[i].date)}</text>`; }
+  s += `<line id="cross" y1="${pt}" y2="${base}" stroke="var(--text)" stroke-width="1" stroke-dasharray="3 3" opacity="0" /></svg><div id="tip"></div>`;
+  box.innerHTML = s + `<div class="legend"><span><i style="background:var(--bar)"></i>${esc(t('price_'))}</span>${maPts.length > 1 ? `<span><i style="background:var(--ma)"></i>${esc(t('ma200'))}</span>` : ''}</div>`;
+
+  const svg = box.querySelector('svg'), tip = $('#tip'), cross = $('#cross');
+  const show = (ev) => {
+    const rect = svg.getBoundingClientRect(), x = (ev.clientX - rect.left) * (W / rect.width);
+    const i = Math.max(0, Math.min(rows.length - 1, Math.floor((x - pl) / BW))); const r = rows[i], prev = rows[i - 1];
+    const cx = X(i) + BW / 2; cross.setAttribute('x1', cx); cross.setAttribute('x2', cx); cross.setAttribute('opacity', '0.6');
+    box.querySelectorAll('.bar').forEach((b) => b.setAttribute('fill', +b.dataset.i === i ? 'var(--bar-hi)' : 'var(--bar)'));
+    let html = `<b>${money2(r.close)}</b><br>${esc(r.date)}`;
+    if (prev) { const c = (r.close / prev.close - 1) * 100; html += `<br>${esc(state.bars === 'weekly' ? t('w1') : t('d1'))}: ${pct(c, 2)}`; }
+    if (r.ma) html += `<br>${esc(t('ma200'))}: ${pct((r.close / r.ma - 1) * 100)}`;
+    tip.innerHTML = html; tip.style.display = 'block';
+    const px = cx * (rect.width / W), tw = tip.offsetWidth;
+    tip.style.left = Math.max(2, Math.min(px - tw / 2, rect.width - tw - 2)) + 'px'; tip.style.top = '2px';
+  };
+  const hide = () => { tip.style.display = 'none'; cross.setAttribute('opacity', '0'); box.querySelectorAll('.bar').forEach((b) => b.setAttribute('fill', 'var(--bar)')); };
+  svg.addEventListener('pointermove', show); svg.addEventListener('pointerdown', show); svg.addEventListener('pointerleave', hide);
+
+  const first = rows[0].close, lastc = rows[rows.length - 1].close, closes = rows.map((r) => r.close);
+  $('#chartStats').innerHTML = `<div class="stats"><div>${esc(t('change'))}<b class="${signCls(lastc - first)}">${pct((lastc / first - 1) * 100)}</b></div><div>${esc(t('high_'))}<b>${money2(Math.max(...closes))}</b></div><div>${esc(t('low_'))}<b>${money2(Math.min(...closes))}</b></div></div>`;
+}
+function bindChartInputs() {
+  const f = $('#cFrom'), to = $('#cTo');
+  const upd = () => { if (f.value && to.value && f.value <= to.value) { state.from = f.value; state.to = to.value; drawChart(); } };
+  if (f) f.addEventListener('change', upd); if (to) to.addEventListener('change', upd);
+}
+let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(() => { if (state.tab === 'chart') drawChart(); }, 120); });
+
+/* ---------- messages, sheet ---------- */
+function toast(msg) { const el = $('#toast'); el.textContent = msg; el.style.display = 'block'; clearTimeout(toast.t); toast.t = setTimeout(() => { el.style.display = 'none'; }, 2600); }
+function setMsg(id, msg, ok) { const el = $('#' + id); if (el) { el.textContent = msg || ''; el.className = 'msg' + (ok ? ' ok' : ''); } }
+function canSend() { return !!(tg && tg.initData && tg.initDataUnsafe && !tg.initDataUnsafe.query_id && typeof tg.sendData === 'function'); }
+function openSheet(text) {
+  $('#sheetBox').innerHTML = `<h3 style="margin:0 0 4px">${esc(t('copy_title'))}</h3><div class="note" style="margin-top:0">${esc(t('copy_hint'))}</div><code id="cmdText">${esc(text)}</code>
+    <button class="btn" data-act="copyCmd">${esc(t('copy'))}</button><button class="btn ghost" data-act="closeSheet">${esc(t('close'))}</button>`;
+  $('#sheet').classList.add('show'); $('#sheet').dataset.text = text;
+}
+function sendCmds(lines) {
+  const data = lines.join('\n');
+  if (data.length > 3500) { toast('Too long'); return; }
+  if (canSend()) { try { tg.sendData(data); return; } catch (e) { /* fall through to copy sheet */ } }
+  openSheet(data);
+}
+const posNum = (id) => { const el = $('#' + id); const x = el ? parseFloat(el.value) : NaN; return isFinite(x) && x > 0 ? x : null; };
+
+/* ---------- biometrics (Telegram BiometricManager) ---------- */
+const BM = tg && tg.BiometricManager;
+function bmInit() {
+  return new Promise((res) => {
+    try {
+      if (!BM || (tg.isVersionAtLeast && !tg.isVersionAtLeast('7.2'))) return res(false);
+      const done = () => { state.bio = { available: !!BM.isBiometricAvailable, saved: !!BM.isBiometricTokenSaved }; res(state.bio.available); };
+      if (BM.isInited) done(); else BM.init(done);
+    } catch (e) { res(false); }
+  });
+}
+function bmAccess() { return new Promise((res) => { try { if (BM.isAccessGranted) res(true); else BM.requestAccess({ reason: t('bio_reason') }, (g) => res(!!g)); } catch (e) { res(false); } }); }
+async function bmAuth() { if (!(await bmAccess())) return null; return new Promise((res) => { try { BM.authenticate({ reason: t('bio_reason') }, (ok, token) => res(ok && token ? token : null)); } catch (e) { res(null); } }); }
+async function bmSave(token) { if (!(await bmAccess())) return false; return new Promise((res) => { try { BM.updateBiometricToken(token, (ok) => { state.bio.saved = !!ok && !!token; res(!!ok); }); } catch (e) { res(false); } }); }
+
+/* ---------- unlock ---------- */
+async function unlockWith(pass) {
+  setMsg('lockMsg', '…', true);
+  let text;
+  try {
+    const r = await fetch('data/private.enc?t=' + Date.now(), { cache: 'no-store' });
+    if (r.status === 404) { setMsg('lockMsg', t('no_vault')); return false; }
+    if (!r.ok) throw new Error('http');
+    text = await r.text();
+  } catch (e) { setMsg('lockMsg', t('load_error')); return false; }
+  try {
+    state.vault = normalizeVault(await decryptVault(pass, text)); state.pass = pass;
+    const l = state.vault.settings.lang; if (l === 'en' || l === 'km') { state.lang = l; }
+    render(); return true;
+  } catch (e) {
+    setMsg('lockMsg', e && e.name === 'OperationError' ? t('wrong_pass') : t('load_error')); return false;
+  }
+}
+
+/* ---------- actions ---------- */
+let side = 'buy';
+document.addEventListener('click', async (e) => {
+  const el = e.target.closest('[data-act]'); if (!el) return;
+  const v = el.dataset.v, act = el.dataset.act;
+  switch (act) {
+    case 'tab': state.tab = v; render(); break;
+    case 'lang': state.lang = v; try { localStorage.setItem('gc_lang', v); } catch (x) {} render(); break;
+    case 'range': state.range = v; if (v === 'custom' && !state.to && state.hist.length) { state.to = state.hist[state.hist.length - 1].date; state.from = addDays(state.to, -90); } render(); break;
+    case 'bars': state.bars = v; render(); break;
+    case 'unlock': { const p = $('#pass'); if (p && p.value) { el.disabled = true; const ok = await unlockWith(p.value); if (!ok) el.disabled = false; } break; }
+    case 'bioUnlock': { const tok = await bmAuth(); if (tok) await unlockWith(tok); else setMsg('lockMsg', t('wrong_pass')); break; }
+    case 'bioOn': { const ok = await bmSave(state.pass); if (ok) { render(); toast(t('bio_on')); } break; }
+    case 'bioOff': { await bmSave(''); state.bio.saved = false; render(); toast(t('bio_off')); break; }
+    case 'lockNow': state.vault = null; state.pass = ''; render(); break;
+    case 'side': side = v; $('#tBuy').classList.toggle('on', v === 'buy'); $('#tSell').classList.toggle('on', v === 'sell'); break;
+    case 'sendTrade': {
+      const chi = posNum('fChi'), price = posNum('fPrice'), date = $('#fDate').value;
+      if (!chi || !price) return setMsg('tradeMsg', t('bad_num'));
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || date > todayPP()) return setMsg('tradeMsg', t('bad_date'));
+      if (side === 'sell' && chi > holdings(state.vault.purchases).chi + 1e-9) return setMsg('tradeMsg', t('sell_more'));
+      setMsg('tradeMsg', t('sent_note'), true); sendCmds([`/${side} ${num(chi)} ${num(price)} ${date}`]); break;
+    }
+    case 'sendShop': {
+      const s = posNum('fShopS'), b = posNum('fShopB');
+      if (!s || !b) return setMsg('shopMsg', t('bad_num'));
+      if (b > s) return setMsg('shopMsg', t('bb_high'));
+      setMsg('shopMsg', t('sent_note'), true); sendCmds([`/shop ${num(s)} ${num(b)}`]); break;
+    }
+    case 'sendSettings': {
+      const s = state.vault.settings, cmds = [];
+      const hour = parseInt($('#sHour').value, 10), lang = $('#sLang').value, mo = posNum('sMonthly');
+      if (hour !== +s.hour) cmds.push(`/time ${hour}`);
+      if (lang !== s.lang) cmds.push(`/lang ${lang}`);
+      if (mo && mo !== +s.monthly_chi) cmds.push(`/monthly ${num(mo)}`);
+      [['weekly', 'nWeekly'], ['monthly', 'nMonthly'], ['watchdog', 'nWatch']].forEach(([k, id]) => { if ($('#' + id).checked !== !!s.notify[k]) cmds.push(`/notify ${k} ${$('#' + id).checked ? 'on' : 'off'}`); });
+      if (!cmds.length) return setMsg('setMsg', t('no_change'));
+      setMsg('setMsg', t('sent_note'), true); sendCmds(cmds); break;
+    }
+    case 'sendAlert': {
+      const lvl = posNum('aLevel'); if (!lvl) return setMsg('alMsg', t('bad_num'));
+      setMsg('alMsg', t('sent_note'), true); sendCmds([`/alert ${$('#aDir').value} ${num(lvl)}${$('#aUnit').value === 'chi' ? ' chi' : ''}`]); break;
+    }
+    case 'clearAlerts': sendCmds(['/alert clear']); break;
+    case 'copyCmd': { const text = $('#sheet').dataset.text || ''; try { await navigator.clipboard.writeText(text); toast(t('copied')); } catch (x) { const r = document.createRange(); r.selectNodeContents($('#cmdText')); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(r); } break; }
+    case 'closeSheet': $('#sheet').classList.remove('show'); break;
+  }
+});
+document.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target && e.target.id === 'pass') { const b = document.querySelector('[data-act="unlock"]'); if (b) b.click(); } });
+$('#sheet').addEventListener('click', (e) => { if (e.target.id === 'sheet') $('#sheet').classList.remove('show'); });
+
+/* ---------- start ---------- */
+function applyTheme() {
+  const dark = tg && tg.colorScheme ? tg.colorScheme === 'dark' : window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches;
+  document.documentElement.dataset.theme = dark ? 'dark' : 'light';
+  try { if (tg) { tg.setHeaderColor(dark ? '#07202f' : '#0b5a86'); tg.setBackgroundColor(dark ? '#07202f' : '#eaf5fb'); } } catch (e) {}
+}
+(async function init() {
+  if (tg) { try { tg.ready(); tg.expand(); tg.onEvent && tg.onEvent('themeChanged', applyTheme); } catch (e) {}
+    const lc = tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.language_code;
+    try { if (!localStorage.getItem('gc_lang') && lc === 'en') state.lang = 'en'; } catch (e) { if (lc === 'en') state.lang = 'en'; } }
+  applyTheme(); render();
+  await Promise.all([loadPublic(), bmInit()]);
+  render();
+})();
+})();
 </script>
 </body>
 </html>

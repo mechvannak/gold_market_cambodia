@@ -1,0 +1,47 @@
+name: send
+
+# Starts when Claude pushes data/analysis.json. Applies the decision rules to the encrypted
+# holdings, writes the Khmer/English report, and sends it (watchdog) or queues it (weekly/monthly).
+on:
+  push:
+    branches: [main]
+    paths:
+      - "data/analysis.json"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Shares one lane with sync.yml so only one job writes data/private.enc at a time.
+concurrency:
+  group: vault
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Read messages and apply commands (so the report uses your latest holdings)
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          VAULT_PASSPHRASE: ${{ secrets.VAULT_PASSPHRASE }}
+        run: python scripts/telegram_sync.py
+      - name: Build report
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          VAULT_PASSPHRASE: ${{ secrets.VAULT_PASSPHRASE }}
+        run: python scripts/telegram_sync.py send
+      - name: Commit vault
+        run: bash scripts/git_push.sh "data: vault update" data/private.enc
+      - name: Send messages
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          VAULT_PASSPHRASE: ${{ secrets.VAULT_PASSPHRASE }}
+        run: python scripts/telegram_sync.py flush
