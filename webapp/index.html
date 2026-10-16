@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gold Forecast</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root {
+    --bg: var(--tg-theme-bg-color, #ffffff);
+    --bg2: var(--tg-theme-secondary-bg-color, #f2f3f5);
+    --text: var(--tg-theme-text-color, #111111);
+    --hint: var(--tg-theme-hint-color, #7a7f87);
+    --btn: var(--tg-theme-button-color, #2481cc);
+    --btn-text: var(--tg-theme-button-text-color, #ffffff);
+    --up: #1a9d5b;
+    --down: #d6453d;
+    --flat: #c98a12;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg2); color: var(--text); font: 15px/1.45 -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; padding: 12px 12px 28px; }
+  .card { background: var(--bg); border-radius: 14px; padding: 14px; margin-bottom: 10px; }
+  h2 { font-size: 13px; font-weight: 600; color: var(--hint); text-transform: uppercase; letter-spacing: .04em; margin: 0 0 8px; }
+  .hero { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .price { font-size: 32px; font-weight: 700; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .sub { color: var(--hint); font-size: 13px; }
+  .badge { display: inline-block; padding: 4px 10px; border-radius: 999px; font-weight: 700; font-size: 13px; color: #fff; }
+  .bullish { background: var(--up); } .bearish { background: var(--down); } .neutral { background: var(--flat); }
+  .action { margin-top: 10px; font-weight: 700; }
+  .note { color: var(--hint); font-size: 13px; margin-top: 2px; }
+  .zones { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .zone { border-radius: 12px; padding: 12px; border: 1.5px solid; }
+  .zone.buy { border-color: var(--up); } .zone.sell { border-color: var(--down); }
+  .zone .lbl { font-size: 12px; font-weight: 600; } .zone.buy .lbl { color: var(--up); } .zone.sell .lbl { color: var(--down); }
+  .zone .val { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .meta { display: flex; justify-content: space-between; margin-top: 10px; font-size: 13px; color: var(--hint); }
+  canvas { width: 100%; height: 190px; display: block; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  td, th { padding: 6px 0; text-align: right; font-size: 14px; } th { color: var(--hint); font-weight: 500; font-size: 12px; }
+  td:first-child, th:first-child { text-align: left; }
+  .bar { display: flex; align-items: center; gap: 8px; margin: 6px 0; font-size: 13px; }
+  .bar .name { width: 74px; color: var(--hint); }
+  .track { position: relative; flex: 1; height: 8px; background: var(--bg2); border-radius: 4px; }
+  .fill { position: absolute; top: 0; height: 8px; border-radius: 4px; }
+  .track::after { content: ""; position: absolute; left: 50%; top: -2px; width: 1px; height: 12px; background: var(--hint); opacity: .5; }
+  .bar .num { width: 44px; text-align: right; font-variant-numeric: tabular-nums; }
+  .driver { padding: 7px 0; border-top: 1px solid var(--bg2); font-size: 14px; }
+  .driver:first-of-type { border-top: 0; }
+  .driver b.up { color: var(--up); } .driver b.down { color: var(--down); }
+  a { color: var(--btn); text-decoration: none; }
+  .head { padding: 5px 0; font-size: 13px; }
+  .disc { color: var(--hint); font-size: 12px; text-align: center; padding: 6px 10px; }
+  button { background: var(--btn); color: var(--btn-text); border: 0; border-radius: 10px; padding: 10px 14px; font-size: 14px; font-weight: 600; width: 100%; }
+  button:disabled { opacity: .6; }
+  #err { color: var(--down); text-align: center; padding: 30px 10px; }
+  .skeleton { color: var(--hint); text-align: center; padding: 40px 0; }
+</style>
+</head>
+<body>
+<div id="app"><div class="skeleton">Analysing news and prices…</div></div>
+<script>
+const tg = window.Telegram && Telegram.WebApp;
+if (tg) { tg.ready(); tg.expand(); }
+
+const $ = (id) => document.getElementById(id);
+const money = (n) => "$" + Number(n).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const money0 = (n) => "$" + Math.round(n).toLocaleString("en-US");
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const safeUrl = (u) => (/^https?:\/\//i.test(u) ? u : "#");
+
+async function load(refresh = false) {
+  const res = await fetch("/api/forecast" + (refresh ? "?refresh=true" : ""), {
+    headers: { "X-Telegram-Init-Data": tg ? tg.initData : "" },
+  });
+  if (!res.ok) {
+    let msg = "Could not load the forecast.";
+    try { msg = (await res.json()).detail || msg; } catch (e) {}
+    throw new Error(msg);
+  }
+  return res.json();
+}
+
+function scoreBar(name, v) {
+  const pct = Math.min(Math.abs(v), 1) * 50;
+  const color = v >= 0 ? "var(--up)" : "var(--down)";
+  const style = v >= 0 ? `left:50%;width:${pct}%` : `left:${50 - pct}%;width:${pct}%`;
+  return `<div class="bar"><span class="name">${name}</span><div class="track"><div class="fill" style="${style};background:${color}"></div></div><span class="num">${v >= 0 ? "+" : ""}${v.toFixed(2)}</span></div>`;
+}
+
+function render(f) {
+  const lv = f.levels;
+  const drivers = f.news.drivers.map((d) => {
+    const up = d.direction === "bullish";
+    return `<div class="driver"><b class="${up ? "up" : "down"}">${up ? "▲" : "▼"} ${esc(d.theme)}</b><div class="sub">${esc(d.why)}</div></div>`;
+  }).join("");
+  const heads = f.news.headlines.map((h) => `<div class="head"><a href="${esc(safeUrl(h.link))}" target="_blank" rel="noopener">${esc(h.title)}</a></div>`).join("");
+  const hz = ["1d", "1w", "1m"].map((k) => {
+    const h = f.horizons[k];
+    return `<tr><td>${{ "1d": "Tomorrow", "1w": "1 week", "1m": "1 month" }[k]}</td><td><b>${money0(h.expected)}</b></td><td class="sub">${money0(h.low)} – ${money0(h.high)}</td></tr>`;
+  }).join("");
+  const mac = Object.entries(f.macro).map(([k, c]) => scoreBar({ dxy: "Dollar", us10y: "10y yield", vix: "Fear (VIX)" }[k] || k, c.score)).join("");
+
+  $("app").innerHTML = `
+    <div class="card">
+      <div class="hero">
+        <div><div class="sub">Gold (XAU/USD)</div><div class="price">${money(f.price)}</div></div>
+        <div style="text-align:right"><span class="badge ${f.bias}">${f.bias.toUpperCase()}</span><div class="sub" style="margin-top:4px">${f.confidence} confidence</div></div>
+      </div>
+      <div class="action">${esc(f.action)}</div>
+      <div class="note">${esc(f.note)}</div>
+    </div>
+
+    <div class="card">
+      <h2>Suggested prices</h2>
+      <div class="zones">
+        <div class="zone buy"><div class="lbl">BUY ZONE</div><div class="val">${money0(lv.buy_zone[0])} – ${money0(lv.buy_zone[1])}</div></div>
+        <div class="zone sell"><div class="lbl">SELL ZONE</div><div class="val">${money0(lv.sell_zone[0])} – ${money0(lv.sell_zone[1])}</div></div>
+      </div>
+      <div class="meta"><span>Stop-loss ${money0(lv.stop)}</span><span>Reward/risk ${lv.reward_risk}</span></div>
+    </div>
+
+    <div class="card"><h2>Last 90 days</h2><canvas id="chart"></canvas></div>
+
+    <div class="card">
+      <h2>Price outlook</h2>
+      <table><tr><th></th><th>Expected</th><th>Typical range</th></tr>${hz}</table>
+    </div>
+
+    <div class="card">
+      <h2>What drives the call</h2>
+      ${scoreBar("News", f.scores.news)}${scoreBar("Macro", f.scores.macro)}${scoreBar("Technical", f.scores.technical)}
+      <div class="sub" style="margin-top:6px">Weights: news ${f.weights.news * 100}%, macro ${f.weights.macro * 100}%, technical ${f.weights.technical * 100}%. RSI ${f.technical.rsi.toFixed(0)}.</div>
+      ${mac ? `<div style="margin-top:10px" class="sub">Macro detail (last 5 days)</div>${mac}` : ""}
+    </div>
+
+    <div class="card">
+      <h2>News read${f.news.method === "claude" ? " · by Claude" : ""}</h2>
+      <p style="margin:0 0 8px">${esc(f.news.summary)}</p>
+      ${drivers}
+    </div>
+
+    <div class="card"><h2>Latest headlines</h2>${heads || '<div class="sub">None found.</div>'}</div>
+
+    <button id="refresh">Refresh now</button>
+    <div class="disc">${esc(f.disclaimer)}<br>Updated ${new Date(f.generated_at).toLocaleString()}</div>`;
+
+  drawChart(f);
+  $("refresh").onclick = async (e) => {
+    e.target.disabled = true; e.target.textContent = "Refreshing…";
+    try { render(await load(true)); } catch (err) { e.target.disabled = false; e.target.textContent = "Refresh now"; if (tg && tg.showAlert) tg.showAlert(err.message); }
+  };
+}
+
+function drawChart(f) {
+  const cv = $("chart"), dpr = window.devicePixelRatio || 1;
+  const W = cv.clientWidth, H = cv.clientHeight;
+  cv.width = W * dpr; cv.height = H * dpr;
+  const g = cv.getContext("2d"); g.scale(dpr, dpr);
+  const css = getComputedStyle(document.documentElement);
+  const up = css.getPropertyValue("--up").trim(), down = css.getPropertyValue("--down").trim(), hint = css.getPropertyValue("--hint").trim() || "#888", btn = css.getPropertyValue("--btn").trim() || "#2481cc";
+  const ys = f.history.close, lv = f.levels;
+  const lo = Math.min(...ys, lv.buy_zone[0], lv.stop) * 0.998, hi = Math.max(...ys, lv.sell_zone[1]) * 1.002;
+  const padL = 6, padR = 44, padT = 6, padB = 16;
+  const X = (i) => padL + (i / (ys.length - 1)) * (W - padL - padR);
+  const Y = (v) => padT + (1 - (v - lo) / (hi - lo)) * (H - padT - padB);
+  const band = (a, b, color) => { g.fillStyle = color; g.globalAlpha = 0.16; g.fillRect(padL, Y(b), W - padL - padR, Y(a) - Y(b)); g.globalAlpha = 1; };
+  band(lv.buy_zone[0], lv.buy_zone[1], up);
+  band(lv.sell_zone[0], lv.sell_zone[1], down);
+  g.strokeStyle = down; g.setLineDash([4, 4]); g.lineWidth = 1; g.globalAlpha = .7;
+  g.beginPath(); g.moveTo(padL, Y(lv.stop)); g.lineTo(W - padR, Y(lv.stop)); g.stroke(); g.setLineDash([]); g.globalAlpha = 1;
+  g.strokeStyle = btn; g.lineWidth = 2; g.lineJoin = "round"; g.beginPath();
+  ys.forEach((v, i) => (i ? g.lineTo(X(i), Y(v)) : g.moveTo(X(i), Y(v)))); g.stroke();
+  g.fillStyle = hint; g.font = "11px system-ui, sans-serif"; g.textAlign = "left";
+  [["buy", (lv.buy_zone[0] + lv.buy_zone[1]) / 2], ["sell", (lv.sell_zone[0] + lv.sell_zone[1]) / 2], ["stop", lv.stop]].forEach(([t, v]) => g.fillText(t, W - padR + 6, Y(v) + 4));
+  g.fillText(f.history.dates[0].slice(5), padL, H - 3);
+  g.textAlign = "right"; g.fillText(f.history.dates[ys.length - 1].slice(5), W - padR, H - 3);
+}
+
+load().then(render).catch((e) => { $("app").innerHTML = `<div id="err">${esc(e.message)}</div>`; });
+</script>
+</body>
+</html>
