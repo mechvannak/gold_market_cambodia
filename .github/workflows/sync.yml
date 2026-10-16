@@ -42,7 +42,7 @@ jobs:
           VAULT_PASSPHRASE: ${{ secrets.VAULT_PASSPHRASE }}
         run: python scripts/deliver.py
       - name: Commit vault
-        run: bash scripts/git_push.sh "data: vault update" data/private.enc
+        run: 'bash scripts/git_push.sh "data: vault update" data/private.enc'
       - name: Send messages
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}

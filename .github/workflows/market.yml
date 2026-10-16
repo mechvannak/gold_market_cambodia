@@ -27,4 +27,4 @@ jobs:
       - name: Fetch market data
         run: python scripts/market.py
       - name: Commit and push
-        run: bash scripts/git_push.sh "data: market update" data/market.json data/history.csv
+        run: 'bash scripts/git_push.sh "data: market update" data/market.json data/history.csv'
